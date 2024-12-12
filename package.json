@@ -1,0 +1,26 @@
+{
+  "name": "node-mdbx",
+  "version": "1.0.0",
+  "gypfile": true,
+  "main": "index.js",
+  "author": "Keller",
+  "license": "MIT",
+  "private": true,
+  "scripts": {
+    "install": "node-gyp-build",
+    "configure": "node-gyp configure",
+    "build:dev": "node-gyp -j 4 build --debug",
+    "build": "node-gyp -j 4 build",
+    "rebuild:dev": "node-gyp -j 4 rebuild --debug",
+    "rebuild": "node-gyp -j 4 rebuild",
+    "clean": "node-gyp clean"
+  },
+  "dependencies": {
+    "node-gyp-build": "^4.8.4"
+  },
+  "devDependencies": {
+    "@types/node": "^22.10.1",
+    "node-addon-api": "^8.2.1",
+    "node-gyp": "^10.2.0"
+  }
+}

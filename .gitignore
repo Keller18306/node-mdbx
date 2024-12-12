@@ -1,0 +1,11 @@
+/build
+/node_modules
+/yarn.lock
+
+# mdbx out exe files
+/libmdbx/mdbx_chk
+/libmdbx/mdbx_copy
+/libmdbx/mdbx_drop
+/libmdbx/mdbx_dump
+/libmdbx/mdbx_load
+/libmdbx/mdbx_stat

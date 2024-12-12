@@ -1,0 +1,1 @@
+module.exports = require('./build/Debug/node-mdbx.node');

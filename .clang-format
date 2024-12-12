@@ -1,0 +1,28 @@
+BasedOnStyle: LLVM
+IndentWidth: 4
+TabWidth: 4
+ContinuationIndentWidth: 4
+UseTab: Always
+ColumnLimit: 150
+
+BreakConstructorInitializers: AfterColon
+
+BreakBeforeBraces: Attach
+AlignAfterOpenBracket: DontAlign
+BinPackArguments: true
+BinPackParameters: true
+
+AlignOperands: true
+AlignTrailingComments: true
+
+# Cpp11BracedListStyle: false
+
+SortIncludes: true
+IncludeBlocks: Regroup
+IncludeCategories:
+  - Type: StandardLibrary
+    SortPriority: 1
+  - Type: System
+    SortPriority: 2
+  - Type: User
+    SortPriority: 3

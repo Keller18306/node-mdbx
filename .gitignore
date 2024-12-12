@@ -2,6 +2,9 @@
 /node_modules
 /yarn.lock
 
+/db
+/test.js
+
 # mdbx out exe files
 /libmdbx/mdbx_chk
 /libmdbx/mdbx_copy

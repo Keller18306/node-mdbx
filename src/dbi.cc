@@ -36,7 +36,8 @@ MDBX_Dbi::MDBX_Dbi(const Napi::CallbackInfo &info) : Napi::ObjectWrap<MDBX_Dbi>(
 	MDBX_txn_flags_t txnFlags = MDBX_TXN_READWRITE;
 
 	this->env = info[0].As<Napi::External<MDBX_env>>().Data();
-	const char *name = info[1].IsNull() ? nullptr : info[1].ToString().Utf8Value().c_str();
+	Napi::Value nameValue = info[1];
+	// const char *name = info[1].IsNull() ? nullptr : info[1].ToString().Utf8Value().c_str();
 
 	if (info[2].IsObject()) {
 		Napi::Object options = info[2].ToObject();
@@ -88,7 +89,12 @@ MDBX_Dbi::MDBX_Dbi(const Napi::CallbackInfo &info) : Napi::ObjectWrap<MDBX_Dbi>(
 	}
 
 	try {
-		rc = mdbx_dbi_open(txn, name, static_cast<MDBX_db_flags>(dbiFlags), &this->dbi);
+		if (nameValue.IsNull()) {
+			rc = mdbx_dbi_open(txn, nullptr, static_cast<MDBX_db_flags>(dbiFlags), &this->dbi);
+		} else {
+			rc = mdbx_dbi_open(txn, nameValue.ToString().Utf8Value().c_str(), static_cast<MDBX_db_flags>(dbiFlags), &this->dbi);
+		}
+
 		if (rc) {
 			Utils::throwMdbxError(env, rc);
 			return;

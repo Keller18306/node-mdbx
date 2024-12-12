@@ -222,13 +222,14 @@ Napi::Value MDBX_Env::Stat(const Napi::CallbackInfo &info) {
 Napi::Value MDBX_Env::GetDbi(const Napi::CallbackInfo &info) {
 	Napi::Env env = info.Env();
 
-	if (info.Length() < 1 || !info[0].IsString()) {
-		Napi::TypeError::New(env, "Expected a string as the first argument").ThrowAsJavaScriptException();
+	Napi::Value name = info[0];
+
+	if (!name.IsString() && !name.IsNull()) {
+		Napi::TypeError::New(env, "Expected a string/null as the first argument").ThrowAsJavaScriptException();
 		return env.Undefined();
 	}
 
 	Napi::External<MDBX_env> externalEnv = Napi::External<MDBX_env>::New(env, this->env);
-	Napi::String name = info[0].ToString();
 
 	Napi::Object options = Napi::Object::New(env);
 	if (info[1].IsObject()) {

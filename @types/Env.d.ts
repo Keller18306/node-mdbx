@@ -1,3 +1,4 @@
+import { CursorValue } from './Cursor';
 import { Dbi, DbiOptions } from './Dbi'
 import { Info } from './Info';
 import { Stat } from './Stat';
@@ -39,7 +40,7 @@ export declare class Env {
 
     public info(): Info;
     public stat(): Stat;
-    public getDbi(name: string | null, options?: DbiOptions): Dbi;
+    public getDbi(name: CursorValue | null, options?: DbiOptions): Dbi;
     public getTxn(options?: TxnOptions): Txn;
     public close(): void;
 }

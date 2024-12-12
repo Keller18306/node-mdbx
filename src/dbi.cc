@@ -24,7 +24,7 @@ void MDBX_Dbi::Init(Napi::Env env) {
 MDBX_Dbi::MDBX_Dbi(const Napi::CallbackInfo &info) : Napi::ObjectWrap<MDBX_Dbi>(info) {
 	Napi::Env env = info.Env();
 
-	if (!info[0].IsExternal() || (!info[1].IsString() && !info[1].IsNull())) {
+	if (!info[0].IsExternal()) {
 		Napi::TypeError::New(env, "Invalid constructor data").ThrowAsJavaScriptException();
 		return;
 	}
@@ -90,9 +90,19 @@ MDBX_Dbi::MDBX_Dbi(const Napi::CallbackInfo &info) : Napi::ObjectWrap<MDBX_Dbi>(
 
 	try {
 		if (nameValue.IsNull()) {
-			rc = mdbx_dbi_open(txn, nullptr, static_cast<MDBX_db_flags>(dbiFlags), &this->dbi);
+			rc = mdbx_dbi_open2(txn, nullptr, static_cast<MDBX_db_flags>(dbiFlags), &this->dbi);
 		} else {
-			rc = mdbx_dbi_open(txn, nameValue.ToString().Utf8Value().c_str(), static_cast<MDBX_db_flags>(dbiFlags), &this->dbi);
+			buffer_t buffer;
+			MDBX_val value;
+
+			try {
+				value = Utils::argToMdbxValue(env, nameValue, buffer);
+			} catch (const Napi::Error &e) {
+				e.ThrowAsJavaScriptException();
+				return;
+			}
+
+			rc = mdbx_dbi_open2(txn, &value, static_cast<MDBX_db_flags>(dbiFlags), &this->dbi);
 		}
 
 		if (rc) {

@@ -224,8 +224,8 @@ Napi::Value MDBX_Env::GetDbi(const Napi::CallbackInfo &info) {
 
 	Napi::Value name = info[0];
 
-	if (!name.IsString() && !name.IsNull()) {
-		Napi::TypeError::New(env, "Expected a string/null as the first argument").ThrowAsJavaScriptException();
+	if (name.IsUndefined()) {
+		Napi::TypeError::New(env, "Expected the first argument").ThrowAsJavaScriptException();
 		return env.Undefined();
 	}
 
@@ -261,6 +261,6 @@ void MDBX_Env::Close(const Napi::CallbackInfo &info) {
 
 MDBX_Env::~MDBX_Env() {
 	if (this->env) {
-		mdbx_env_close_ex(this->env, true);
+		mdbx_env_close_ex(this->env, false);
 	}
 }

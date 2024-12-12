@@ -12,3 +12,8 @@
 /libmdbx/mdbx_dump
 /libmdbx/mdbx_load
 /libmdbx/mdbx_stat
+/libmdbx/config.h
+/libmdbx/*.o
+/libmdbx/*.tag
+/libmdbx/*.a
+/libmdbx/*.so

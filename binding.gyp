@@ -11,7 +11,7 @@
         "src/txn.cc",
         "src/dbi.cc",
         "src/cursor.cc",
-        "src/misc.cc",
+        "src/version.cc",
         "src/utils.cc"
       ],
       "include_dirs": [

@@ -1,4 +1,4 @@
-#include "misc.h"
+#include "version.h"
 
 #include <sstream>
 
@@ -7,8 +7,9 @@ Napi::Object ConvertMDBXVersionToJS(const Napi::Env &env) {
 
 	versionInfo.Set("major", Napi::Number::New(env, mdbx_version.major));
 	versionInfo.Set("minor", Napi::Number::New(env, mdbx_version.minor));
-	versionInfo.Set("release", Napi::Number::New(env, mdbx_version.release));
-	versionInfo.Set("revision", Napi::Number::New(env, mdbx_version.revision));
+	versionInfo.Set("patch", Napi::Number::New(env, mdbx_version.patch));
+	versionInfo.Set("tweak", Napi::Number::New(env, mdbx_version.tweak));
+	versionInfo.Set("semver_prerelease", Napi::String::New(env, mdbx_version.semver_prerelease));
 
 	Napi::Object gitInfo = Napi::Object::New(env);
 	gitInfo.Set("datetime", mdbx_version.git.datetime ? Napi::String::New(env, mdbx_version.git.datetime) : env.Null());
@@ -31,6 +32,7 @@ Napi::Object ConvertMDBXBuildToJS(const Napi::Env &env) {
 	buildInfo.Set("options", mdbx_build.options ? Napi::String::New(env, mdbx_build.options) : env.Null());
 	buildInfo.Set("compiler", mdbx_build.compiler ? Napi::String::New(env, mdbx_build.compiler) : env.Null());
 	// buildInfo.Set("flags", mdbx_build.flags ? Napi::String::New(env, mdbx_build.flags) : env.Null());
+	buildInfo.Set("metadata", mdbx_build.metadata ? Napi::String::New(env, mdbx_build.metadata) : env.Null());
 
 	return buildInfo;
 }
@@ -38,12 +40,12 @@ Napi::Object ConvertMDBXBuildToJS(const Napi::Env &env) {
 Napi::String GetVersionString(const Napi::Env &env) {
 	std::ostringstream versionStream;
 	versionStream << static_cast<int>(mdbx_version.major) << "." << static_cast<int>(mdbx_version.minor) << "."
-				  << static_cast<int>(mdbx_version.release) << "." << mdbx_version.revision;
+				  << static_cast<int>(mdbx_version.patch) << "." << mdbx_version.tweak;
 
 	return Napi::String::New(env, versionStream.str());
 }
 
-void MDBX_Misc::Init(Napi::Env env, Napi::Object exports) {
+void MDBX_Version::Init(Napi::Env env, Napi::Object exports) {
 	exports.Set("VERSION_STRING", GetVersionString(env));
 	exports.Set("version", ConvertMDBXVersionToJS(env));
 	exports.Set("build", ConvertMDBXBuildToJS(env));

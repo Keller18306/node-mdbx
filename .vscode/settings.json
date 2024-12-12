@@ -80,7 +80,7 @@
                 "program": "/usr/bin/node",
                 "args": [
                     "--expose-gc",
-                    "index.js"
+                    "test.js"
                 ],
                 "cwd": "${workspaceFolder}",
                 // "env": {

@@ -1,7 +1,7 @@
 #include <mdbx.h>
 #include <napi.h>
 
-class MDBX_Misc : public Napi::ObjectWrap<MDBX_Misc> {
+class MDBX_Version : public Napi::ObjectWrap<MDBX_Version> {
   private:
 	Napi::Value Version(const Napi::CallbackInfo &info);
 

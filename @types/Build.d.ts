@@ -1,6 +1,7 @@
 export interface Build {
-    datetime: string | null,
-    target: string | null,
-    options: string | null,
-    compiler: string | null
+    datetime: string | null;
+    target: string | null;
+    options: string | null;
+    compiler: string | null;
+    metadata: string | null;
 }

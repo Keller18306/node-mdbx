@@ -24,9 +24,8 @@ export declare interface Dbi {
     stat(txn?: Txn): Stat;
 
     getCursor<TKey extends CursorValueType, TValue extends CursorValueType>(
-        options: { keyType?: TKey; dataType?: TValue }
+        options: CursorOptions & { keyType?: TKey; dataType?: TValue }
     ): Cursor<ResolveCursorDataType<TKey>, ResolveCursorDataType<TValue>>;
-    getCursor(options?: CursorOptions): Cursor;
 
     drop(options?: DbiDropOptions): void;
     rename(name: string, txn?: Txn): void;

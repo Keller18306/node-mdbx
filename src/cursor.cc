@@ -44,6 +44,7 @@ void MDBX_Cursor::Init(Napi::Env env) {
 			InstanceMethod("prevDup", &MDBX_Cursor::PrevDup),
 			InstanceMethod("prevNoDup", &MDBX_Cursor::PrevNoDup),
 
+			InstanceMethod("set", &MDBX_Cursor::Set),
 			InstanceMethod("range", &MDBX_Cursor::Range),
 
 			InstanceMethod("put", &MDBX_Cursor::Put),
@@ -191,7 +192,7 @@ Napi::Value MDBX_Cursor::Count(const Napi::CallbackInfo &info) {
 	return Napi::Number::New(info.Env(), count);
 }
 
-Napi::Value MDBX_Cursor::_common(const Napi::CallbackInfo &info, MDBX_cursor_op op, bool checkDupFlag) {
+Napi::Value MDBX_Cursor::_commonMove(const Napi::CallbackInfo &info, MDBX_cursor_op op, bool checkDupFlag) {
 	Napi::Env env = info.Env();
 
 	if (checkDupFlag && !(this->dbiFlags & MDBX_DUPSORT)) {
@@ -220,27 +221,7 @@ Napi::Value MDBX_Cursor::_common(const Napi::CallbackInfo &info, MDBX_cursor_op 
 	return Utils::vectorBufferToArg(env, this->keyType, this->isIntBE, this->_keyBuffer);
 }
 
-Napi::Value MDBX_Cursor::First(const Napi::CallbackInfo &info) { return _common(info, MDBX_FIRST, false); }
-
-Napi::Value MDBX_Cursor::FirstDup(const Napi::CallbackInfo &info) { return _common(info, MDBX_FIRST_DUP, true); }
-
-Napi::Value MDBX_Cursor::Last(const Napi::CallbackInfo &info) { return _common(info, MDBX_LAST, false); }
-
-Napi::Value MDBX_Cursor::LastDup(const Napi::CallbackInfo &info) { return _common(info, MDBX_LAST_DUP, true); }
-
-Napi::Value MDBX_Cursor::Next(const Napi::CallbackInfo &info) { return _common(info, MDBX_NEXT, false); }
-
-Napi::Value MDBX_Cursor::NextDup(const Napi::CallbackInfo &info) { return _common(info, MDBX_NEXT_DUP, true); }
-
-Napi::Value MDBX_Cursor::NextNoDup(const Napi::CallbackInfo &info) { return _common(info, MDBX_NEXT_NODUP, false); }
-
-Napi::Value MDBX_Cursor::Prev(const Napi::CallbackInfo &info) { return _common(info, MDBX_PREV, false); }
-
-Napi::Value MDBX_Cursor::PrevDup(const Napi::CallbackInfo &info) { return _common(info, MDBX_PREV_DUP, true); }
-
-Napi::Value MDBX_Cursor::PrevNoDup(const Napi::CallbackInfo &info) { return _common(info, MDBX_PREV_NODUP, false); }
-
-Napi::Value MDBX_Cursor::Range(const Napi::CallbackInfo &info) {
+Napi::Value MDBX_Cursor::_commonSet(const Napi::CallbackInfo &info, MDBX_cursor_op opKeyOnly, MDBX_cursor_op opKeyValue) {
 	Napi::Env env = info.Env();
 
 	if (info.Length() < 1) {
@@ -258,10 +239,10 @@ Napi::Value MDBX_Cursor::Range(const Napi::CallbackInfo &info) {
 				return Utils::Error(env, "Dbi is not MDB_DUPSORT");
 			}
 
-			op = MDBX_GET_BOTH_RANGE;
+			op = opKeyValue;
 			data = Utils::argToMdbxValue(env, info[1], this->_dataBuffer);
 		} else {
-			op = MDBX_SET_RANGE;
+			op = opKeyOnly;
 		}
 	} catch (const Napi::Error &e) {
 		e.ThrowAsJavaScriptException();
@@ -288,6 +269,30 @@ Napi::Value MDBX_Cursor::Range(const Napi::CallbackInfo &info) {
 
 	return Utils::vectorBufferToArg(env, this->keyType, this->isIntBE, this->_keyBuffer);
 }
+
+Napi::Value MDBX_Cursor::First(const Napi::CallbackInfo &info) { return _commonMove(info, MDBX_FIRST, false); }
+
+Napi::Value MDBX_Cursor::FirstDup(const Napi::CallbackInfo &info) { return _commonMove(info, MDBX_FIRST_DUP, true); }
+
+Napi::Value MDBX_Cursor::Last(const Napi::CallbackInfo &info) { return _commonMove(info, MDBX_LAST, false); }
+
+Napi::Value MDBX_Cursor::LastDup(const Napi::CallbackInfo &info) { return _commonMove(info, MDBX_LAST_DUP, true); }
+
+Napi::Value MDBX_Cursor::Next(const Napi::CallbackInfo &info) { return _commonMove(info, MDBX_NEXT, false); }
+
+Napi::Value MDBX_Cursor::NextDup(const Napi::CallbackInfo &info) { return _commonMove(info, MDBX_NEXT_DUP, true); }
+
+Napi::Value MDBX_Cursor::NextNoDup(const Napi::CallbackInfo &info) { return _commonMove(info, MDBX_NEXT_NODUP, false); }
+
+Napi::Value MDBX_Cursor::Prev(const Napi::CallbackInfo &info) { return _commonMove(info, MDBX_PREV, false); }
+
+Napi::Value MDBX_Cursor::PrevDup(const Napi::CallbackInfo &info) { return _commonMove(info, MDBX_PREV_DUP, true); }
+
+Napi::Value MDBX_Cursor::PrevNoDup(const Napi::CallbackInfo &info) { return _commonMove(info, MDBX_PREV_NODUP, false); }
+
+Napi::Value MDBX_Cursor::Set(const Napi::CallbackInfo &info) { return _commonSet(info, MDBX_SET_KEY, MDBX_GET_BOTH); }
+
+Napi::Value MDBX_Cursor::Range(const Napi::CallbackInfo &info) { return _commonSet(info, MDBX_SET_RANGE, MDBX_GET_BOTH_RANGE); }
 
 void MDBX_Cursor::Put(const Napi::CallbackInfo &info) {
 	Napi::Env env = info.Env();

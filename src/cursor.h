@@ -38,6 +38,7 @@ class MDBX_Cursor : public Napi::ObjectWrap<MDBX_Cursor> {
 	Napi::Value PrevDup(const Napi::CallbackInfo &info);
 	Napi::Value PrevNoDup(const Napi::CallbackInfo &info);
 
+	Napi::Value Set(const Napi::CallbackInfo &info);
 	Napi::Value Range(const Napi::CallbackInfo &info);
 
 	void Put(const Napi::CallbackInfo &info);
@@ -46,7 +47,8 @@ class MDBX_Cursor : public Napi::ObjectWrap<MDBX_Cursor> {
 	void Reset(const Napi::CallbackInfo &info);
 	void Close(const Napi::CallbackInfo &info);
 
-	Napi::Value _common(const Napi::CallbackInfo &info, MDBX_cursor_op op, bool checkDupFlag);
+	Napi::Value _commonMove(const Napi::CallbackInfo &info, MDBX_cursor_op op, bool checkDupFlag);
+	Napi::Value _commonSet(const Napi::CallbackInfo &info, MDBX_cursor_op opKeyOnly, MDBX_cursor_op opKeyValue);
 
   public:
 	static Napi::FunctionReference constructor;

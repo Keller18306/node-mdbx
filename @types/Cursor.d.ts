@@ -83,6 +83,7 @@ export declare interface Cursor<TKey extends CursorValue = Buffer, TValue extend
     prevDup(): TKey;
     prevNoDup(): TKey;
 
+    set(key: CursorValue, value?: CursorValue): TKey | null;
     range(key: CursorValue, value?: CursorValue): TKey | null;
 
     put(key: CursorValue, value: CursorValue, options?: CursorPutOptions): void;

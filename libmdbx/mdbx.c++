@@ -2,7 +2,9 @@
 /// \author Леонид Юрьев aka Leonid Yuriev <leo@yuriev.ru> \date 2015-2024
 /* clang-format off */
 
-#define MDBX_BUILD_SOURCERY 97292b3c9bde3516a68096c8c1bbea68b1f368ec2f0f842e3f89a589695905f9_v0_13_2_0_gb687e835
+
+#define MDBX_BUILD_SOURCERY f99d49e319bbfaafc27f8148ae5bf6730c3c48eec53d44f9214be422992a588f_v0_13_2_6_ga845522d
+
 
 #define LIBMDBX_INTERNALS
 #define MDBX_DEPRECATED
@@ -10,6 +12,8 @@
 #ifdef MDBX_CONFIG_H
 #include MDBX_CONFIG_H
 #endif
+
+
 
 /* Undefine the NDEBUG if debugging is enforced by MDBX_DEBUG */
 #if (defined(MDBX_DEBUG) && MDBX_DEBUG > 0) || (defined(MDBX_FORCE_ASSERTIONS) && MDBX_FORCE_ASSERTIONS)
@@ -158,6 +162,7 @@
 #if defined(__GNUC__) && __GNUC__ < 9
 #pragma GCC diagnostic ignored "-Wattributes"
 #endif /* GCC < 9 */
+
 
 /*----------------------------------------------------------------------------*/
 /* Microsoft compiler generates a lot of warning for self includes... */
@@ -1008,6 +1013,8 @@ template <typename T, size_t N> char (&__ArraySizeHelper(T (&array)[N]))[N];
 typedef struct iov_ctx iov_ctx_t;
 ///
 
+
+
 /*----------------------------------------------------------------------------*/
 /* Memory/Compiler barriers, cache coherence */
 
@@ -1580,6 +1587,7 @@ MDBX_MAYBE_UNUSED MDBX_NOTHROW_PURE_FUNCTION static inline uint32_t osal_bswap32
 #define MDBX_WORDBITS 32
 #endif /* MDBX_WORDBITS */
 
+
 /*******************************************************************************
  *******************************************************************************
  *
@@ -1594,6 +1602,8 @@ MDBX_MAYBE_UNUSED MDBX_NOTHROW_PURE_FUNCTION static inline uint32_t osal_bswap32
  *
  *
  */
+
+
 
 /** \defgroup build_option Build options
  * The libmdbx build options.
@@ -2100,6 +2110,9 @@ MDBX_MAYBE_UNUSED MDBX_NOTHROW_PURE_FUNCTION static inline uint32_t osal_bswap32
 
 #endif /* DOXYGEN */
 
+
+
+
 #ifndef MDBX_64BIT_ATOMIC
 #error "The MDBX_64BIT_ATOMIC must be defined before"
 #endif /* MDBX_64BIT_ATOMIC */
@@ -2190,6 +2203,9 @@ typedef union {
 #endif /* MDBX_HAVE_C11ATOMICS */
 
 #define SAFE64_INVALID_THRESHOLD UINT64_C(0xffffFFFF00000000)
+
+
+
 
 #pragma pack(push, 4)
 
@@ -2470,6 +2486,8 @@ MDBX_MAYBE_UNUSED MDBX_NOTHROW_PURE_FUNCTION static inline bool is_largepage(con
 MDBX_MAYBE_UNUSED MDBX_NOTHROW_PURE_FUNCTION static inline bool is_subpage(const page_t *mp) {
   return (mp->flags & P_SUBP) != 0;
 }
+
+
 
 /* The version number for a database's lockfile format. */
 #define MDBX_LOCK_VERSION 6
@@ -2800,6 +2818,9 @@ extern struct libmdbx_globals globals;
 extern struct libmdbx_imports imports;
 #endif /* Windows */
 
+
+
+
 #ifndef __Wpedantic_format_voidptr
 MDBX_MAYBE_UNUSED static inline const void *__Wpedantic_format_voidptr(const void *ptr) { return ptr; }
 #define __Wpedantic_format_voidptr(ARG) __Wpedantic_format_voidptr(ARG)
@@ -2968,6 +2989,8 @@ MDBX_MAYBE_UNUSED static inline int log_if_error(const int err, const char *func
 
 #define LOG_IFERR(err) log_if_error((err), __func__, __LINE__)
 
+
+
 /* Test if the flags f are set in a flag word w. */
 #define F_ISSET(w, f) (((w) & (f)) == (f))
 
@@ -3039,6 +3062,9 @@ MDBX_MAYBE_UNUSED static inline uint64_t monotime_since_cached(uint64_t begin_ti
   }
   return cache->value - begin_timestamp;
 }
+
+
+
 
 /* An PNL is an Page Number List, a sorted array of IDs.
  *
@@ -3212,6 +3238,7 @@ MDBX_NOTHROW_CONST_FUNCTION MDBX_MAYBE_UNUSED static inline pgno_t pgno_sub(size
 /// \brief Non-inline part of the libmdbx C++ API
 ///
 
+
 #if !defined(MDBX_BUILD_CXX) || MDBX_BUILD_CXX != 1
 #error "Build is misconfigured! Expecting MDBX_BUILD_CXX=1 for C++ API."
 #endif /* MDBX_BUILD_CXX*/
@@ -3225,6 +3252,7 @@ MDBX_NOTHROW_CONST_FUNCTION MDBX_MAYBE_UNUSED static inline pgno_t pgno_sub(size
 #define _SILENCE_EXPERIMENTAL_FILESYSTEM_DEPRECATION_WARNING
 #endif /* #define _SILENCE_EXPERIMENTAL_FILESYSTEM_DEPRECATION_WARNING */
 #endif /* _MSC_VER */
+
 
 #include <array>
 #include <atomic>

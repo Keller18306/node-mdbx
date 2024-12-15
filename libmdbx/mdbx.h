@@ -103,11 +103,13 @@ are only a few cases of changing data.
 |Delete at the current cursor position        |\ref mdbx_cursor_del() with \ref MDBX_CURRENT flag|Deletion|
 |Extract (read & delete) value by the key     |\ref mdbx_replace() with zero flag and parameter `new_data = NULL`|Returning a deleted value|
 
+
 ## Tables with NON-UNIQUE keys
 
 In tables created with the \ref MDBX_DUPSORT (Sorted Duplicates) option, keys
 may be non unique. Such non-unique keys in a key-value table may be treated
 as a duplicates or as like a multiple values corresponds to keys.
+
 
 | Case                                        | Flags to use        | Result                 |
 |---------------------------------------------|---------------------|------------------------|

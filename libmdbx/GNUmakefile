@@ -265,6 +265,7 @@ cmake-build:
 	@echo "-G Ninja . && cmake --build ."
 	$(QUIET)mkdir @cmake-ninja-build && $(CMAKE) $(CMAKE_OPT) -G Ninja -S . -B @cmake-ninja-build && $(CMAKE) --build @cmake-ninja-build
 
+
 ################################################################################
 # Amalgamated source code, i.e. distributed after `make dist`
 MAN_SRCDIR := man1/
@@ -307,6 +308,7 @@ mdbx_%.static-lto: mdbx_%.c config.h mdbx.c mdbx.h
 	@echo '  CC+LD $@'
 	$(QUIET)$(CC) $(CFLAGS) -Os -flto $(MDBX_BUILD_OPTIONS) '-DLIBMDBX_API=' '-DMDBX_CONFIG_H="config.h"' \
 		$< mdbx.c $(EXE_LDFLAGS) $(LIBS) -static -Wl,--strip-all -o $@
+
 
 install: $(LIBRARIES) $(MDBX_TOOLS) $(HEADERS)
 	@echo '  INSTALLING...'
@@ -379,6 +381,7 @@ bench-$(1)_$(2).txt: $(3) $(IOARENA) $(lastword $(MAKEFILE_LIST))
 	true) || mv -f $$@ $$@.error
 
 endef
+
 
 $(eval $(call bench-rule,mdbx,$(NN),libmdbx.$(SO_SUFFIX)))
 

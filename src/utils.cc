@@ -1,5 +1,7 @@
 #include "utils.h"
 
+#include "txn.h"
+
 uint32_t Utils::toBigEndian(uint32_t value) {
 	return ((value >> 24) & 0x000000FF) | ((value >> 8) & 0x0000FF00) | ((value << 8) & 0x00FF0000) | ((value << 24) & 0xFF000000);
 }
@@ -175,4 +177,17 @@ void Utils::setFromObject(long *longSetter, Napi::Object flagsObj, const char *o
 
 void Utils::stringToLower(std::string &str) {
 	std::transform(str.begin(), str.end(), str.begin(), [](unsigned char c) { return std::tolower(c); });
+}
+
+MDBX_txn *Utils::argToMdbxTxn(Napi::Env env, Napi::Value arg) {
+	Napi::Object txnObj = arg.ToObject();
+
+	if (txnObj.InstanceOf(MDBX_Txn::constructor.Value())) {
+		MDBX_Txn *txnClass = Napi::ObjectWrap<MDBX_Txn>::Unwrap(txnObj);
+
+		return txnClass->txn;
+	} else {
+		throw Napi::TypeError::New(env, "Invalid Txn: not an instance of Txn");
+		// .ThrowAsJavaScriptException();
+	}
 }

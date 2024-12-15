@@ -4,7 +4,7 @@ import { Info } from './Info';
 import { Stat } from './Stat';
 import { Txn, TxnOptions } from './Txn';
 
-export declare interface EnvFlags {
+export interface EnvFlags {
     validation?: boolean;
     noSubdir?: boolean;
     readOnly?: boolean;
@@ -19,7 +19,7 @@ export declare interface EnvFlags {
     syncMode?: 'durable' | 'safe' | 'utterly';
 }
 
-export declare interface EnvGeometry {
+export interface EnvGeometry {
     sizeLower?: number;
     sizeNow?: number;
     sizeUpper?: number;
@@ -28,11 +28,16 @@ export declare interface EnvGeometry {
     pageSize?: number;
 }
 
-export declare interface EnvOptions {
+export interface EnvOptions {
     mode?: number;
     maxdbs?: number;
     flags?: EnvFlags;
     geometry?: EnvGeometry;
+}
+
+export interface GcInfo {
+    pages: number;
+    reclaimable: number;
 }
 
 export declare class Env {
@@ -42,5 +47,6 @@ export declare class Env {
     public stat(): Stat;
     public getDbi(name: CursorValue | null, options?: DbiOptions): Dbi;
     public getTxn(options?: TxnOptions): Txn;
+    public gcInfo(txn: Txn): GcInfo;
     public close(): void;
 }

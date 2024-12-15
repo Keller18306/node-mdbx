@@ -45,6 +45,7 @@ class MDBX_Cursor : public Napi::ObjectWrap<MDBX_Cursor> {
 	void Del(const Napi::CallbackInfo &info);
 
 	void Reset(const Napi::CallbackInfo &info);
+	void Bind(const Napi::CallbackInfo &info);
 	void Close(const Napi::CallbackInfo &info);
 
 	Napi::Value _commonMove(const Napi::CallbackInfo &info, MDBX_cursor_op op, bool checkDupFlag);

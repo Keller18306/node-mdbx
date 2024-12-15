@@ -24,4 +24,5 @@ class Utils {
 	static void setFromObject(unsigned int *flagsSetter, int flag, Napi::Object flagsObj, const char *objValue);
 	static void setFromObject(long *longSetter, Napi::Object flagsObj, const char *objValue, long defaultValue);
 	static void stringToLower(std::string &str);
+	static MDBX_txn *argToMdbxTxn(Napi::Env env, Napi::Value arg);
 };

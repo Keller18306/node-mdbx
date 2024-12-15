@@ -90,5 +90,6 @@ export declare interface Cursor<TKey extends CursorValue = Buffer, TValue extend
     del(options?: CursorDelOptions): void;
 
     reset(): void;
+    bind(txn: Txn): void;
     close(): void;
 }

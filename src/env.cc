@@ -11,6 +11,7 @@ void MDBX_Env::Init(Napi::Env env, Napi::Object exports) {
 			InstanceMethod("stat", &MDBX_Env::Stat),
 			InstanceMethod("getDbi", &MDBX_Env::GetDbi),
 			InstanceMethod("getTxn", &MDBX_Env::GetTxn),
+			InstanceMethod("gcInfo", &MDBX_Env::GcInfo),
 			InstanceMethod("close", &MDBX_Env::Close),
 		});
 
@@ -250,6 +251,64 @@ Napi::Value MDBX_Env::GetTxn(const Napi::CallbackInfo &info) {
 	}
 
 	return MDBX_Txn::constructor.New({externalEnv, options});
+}
+
+Napi::Value MDBX_Env::GcInfo(const Napi::CallbackInfo &info) {
+	Napi::Env env = info.Env();
+
+	int rc;
+	MDBX_txn *txn;
+	MDBX_cursor *cursor;
+	MDBX_envinfo mei;
+
+	typedef uint32_t pgno_t;
+	typedef uint64_t txnid_t;
+
+	try {
+		txn = Utils::argToMdbxTxn(env, info[0]);
+		MDBX_txn_flags flags = mdbx_txn_flags(txn);
+
+		if (!(flags & MDBX_TXN_RDONLY)) {
+			throw Napi::Error::New(env, "Txn must be readOnly");
+		}
+	} catch (const Napi::Error &e) {
+		e.ThrowAsJavaScriptException();
+		return env.Undefined();
+	}
+
+	rc = mdbx_cursor_open(txn, 0, &cursor);
+	if (rc) {
+		Utils::throwMdbxError(info.Env(), rc);
+		return env.Undefined();
+	}
+
+	rc = mdbx_env_info_ex(this->env, txn, &mei, sizeof(mei));
+	if (rc) {
+		mdbx_cursor_close(cursor);
+		Utils::throwMdbxError(info.Env(), rc);
+		return env.Undefined();
+	}
+
+	pgno_t pages = 0, *iptr;
+	pgno_t reclaimable = 0;
+	MDBX_val key, data;
+	while (MDBX_SUCCESS == (rc = mdbx_cursor_get(cursor, &key, &data, MDBX_NEXT))) {
+		iptr = (pgno_t *)data.iov_base;
+		const pgno_t number = *iptr++;
+
+		pages += number;
+		if (mei.mi_latter_reader_txnid > *(txnid_t *)key.iov_base)
+			reclaimable += number;
+	}
+
+	mdbx_cursor_close(cursor);
+
+	Napi::Object obj = Napi::Object::New(env);
+
+	obj.Set("pages", pages);
+	obj.Set("reclaimable", reclaimable);
+
+	return obj;
 }
 
 void MDBX_Env::Close(const Napi::CallbackInfo &info) {

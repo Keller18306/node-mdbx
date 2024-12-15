@@ -53,15 +53,10 @@ MDBX_Dbi::MDBX_Dbi(const Napi::CallbackInfo &info) : Napi::ObjectWrap<MDBX_Dbi>(
 
 		Napi::Value txnValue = options.Get("txn");
 		if (txnValue.IsObject()) {
-			Napi::Object parentTxnObj = txnValue.ToObject();
-
-			if (parentTxnObj.InstanceOf(MDBX_Txn::constructor.Value())) {
-				MDBX_Txn *parentTxnClass = Napi::ObjectWrap<MDBX_Txn>::Unwrap(parentTxnObj);
-
-				txn = parentTxnClass->txn;
-			} else {
-				Napi::TypeError::New(env, "Invalid Txn: not an instance of Txn").ThrowAsJavaScriptException();
-
+			try {
+				txn = Utils::argToMdbxTxn(env, txnValue);
+			} catch (const Napi::Error &e) {
+				e.ThrowAsJavaScriptException();
 				return;
 			}
 		}
@@ -135,15 +130,10 @@ Napi::Value MDBX_Dbi::Stat(const Napi::CallbackInfo &info) {
 	bool closeTxn = false;
 
 	if (info[0].IsObject()) {
-		Napi::Object parentTxnObj = info[0].ToObject();
-
-		if (parentTxnObj.InstanceOf(MDBX_Txn::constructor.Value())) {
-			MDBX_Txn *txnClass = Napi::ObjectWrap<MDBX_Txn>::Unwrap(parentTxnObj);
-
-			txn = txnClass->txn;
-		} else {
-			Napi::TypeError::New(env, "Invalid Txn: not an instance of Txn").ThrowAsJavaScriptException();
-
+		try {
+			txn = Utils::argToMdbxTxn(env, info[0]);
+		} catch (const Napi::Error &e) {
+			e.ThrowAsJavaScriptException();
 			return env.Undefined();
 		}
 	}
@@ -207,15 +197,10 @@ void MDBX_Dbi::Rename(const Napi::CallbackInfo &info) {
 	std::string name = info[0].ToString().Utf8Value();
 
 	if (info[1].IsObject()) {
-		Napi::Object parentTxnObj = info[0].ToObject();
-
-		if (parentTxnObj.InstanceOf(MDBX_Txn::constructor.Value())) {
-			MDBX_Txn *txnClass = Napi::ObjectWrap<MDBX_Txn>::Unwrap(parentTxnObj);
-
-			txn = txnClass->txn;
-		} else {
-			Napi::TypeError::New(env, "Invalid Txn: not an instance of Txn").ThrowAsJavaScriptException();
-
+		try {
+			txn = Utils::argToMdbxTxn(env, info[1]);
+		} catch (const Napi::Error &e) {
+			e.ThrowAsJavaScriptException();
 			return;
 		}
 	}
@@ -270,15 +255,10 @@ void MDBX_Dbi::Drop(const Napi::CallbackInfo &info) {
 
 		Napi::Value txnValue = options.Get("txn");
 		if (txnValue.IsObject()) {
-			Napi::Object parentTxnObj = txnValue.ToObject();
-
-			if (parentTxnObj.InstanceOf(MDBX_Txn::constructor.Value())) {
-				MDBX_Txn *txnClass = Napi::ObjectWrap<MDBX_Txn>::Unwrap(parentTxnObj);
-
-				txn = txnClass->txn;
-			} else {
-				Napi::TypeError::New(env, "Invalid Txn: not an instance of Txn").ThrowAsJavaScriptException();
-
+			try {
+				txn = Utils::argToMdbxTxn(env, txnValue);
+			} catch (const Napi::Error &e) {
+				e.ThrowAsJavaScriptException();
 				return;
 			}
 		}

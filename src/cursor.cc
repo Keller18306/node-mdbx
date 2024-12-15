@@ -51,6 +51,7 @@ void MDBX_Cursor::Init(Napi::Env env) {
 			InstanceMethod("del", &MDBX_Cursor::Del),
 
 			InstanceMethod("reset", &MDBX_Cursor::Reset),
+			InstanceMethod("bind", &MDBX_Cursor::Bind),
 			InstanceMethod("close", &MDBX_Cursor::Close),
 		});
 
@@ -108,15 +109,10 @@ MDBX_Cursor::MDBX_Cursor(const Napi::CallbackInfo &info) : Napi::ObjectWrap<MDBX
 		}
 
 		if (options.Get("txn").IsObject()) {
-			Napi::Object parentTxnObj = options.Get("txn").ToObject();
-
-			if (parentTxnObj.InstanceOf(MDBX_Txn::constructor.Value())) {
-				MDBX_Txn *parentTxnClass = Napi::ObjectWrap<MDBX_Txn>::Unwrap(parentTxnObj);
-
-				txn = parentTxnClass->txn;
-			} else {
-				Napi::TypeError::New(env, "Invalid Txn: not an instance of Txn").ThrowAsJavaScriptException();
-
+			try {
+				txn = Utils::argToMdbxTxn(env, options.Get("txn"));
+			} catch (const Napi::Error &e) {
+				e.ThrowAsJavaScriptException();
 				return;
 			}
 		}
@@ -343,6 +339,47 @@ void MDBX_Cursor::Reset(const Napi::CallbackInfo &info) {
 	int rc = mdbx_cursor_reset(this->cursor);
 	if (rc) {
 		Utils::throwMdbxError(info.Env(), rc);
+	}
+}
+
+void MDBX_Cursor::Bind(const Napi::CallbackInfo &info) {
+	Napi::Env env = info.Env();
+
+	if (this->closeTxn) {
+		Napi::Error::New(env, "Cannot bind cursor without provided txn").ThrowAsJavaScriptException();
+		return;
+	}
+
+	if (info[0].IsObject()) {
+		try {
+			this->txn = Utils::argToMdbxTxn(env, info[0]);
+		} catch (const Napi::Error &e) {
+			e.ThrowAsJavaScriptException();
+			return;
+		}
+	}
+
+	int rc;
+	MDBX_cursor_op op;
+
+	rc = mdbx_cursor_bind(this->txn, this->cursor, *this->dbi);
+	if (rc) {
+		Utils::throwMdbxError(env, rc);
+	}
+
+	MDBX_val key = Utils::vectorBufferToMdbxValue(this->_keyBuffer);
+	MDBX_val data = Utils::vectorBufferToMdbxValue(this->_dataBuffer);
+
+	if (this->dbiFlags & MDBX_DUPSORT) {
+		op = MDBX_GET_BOTH;
+	} else {
+		op = MDBX_SET;
+	}
+
+	rc = mdbx_cursor_get(this->cursor, &key, &data, op);
+	if (rc) {
+		Utils::throwMdbxError(env, rc);
+		return;
 	}
 }
 

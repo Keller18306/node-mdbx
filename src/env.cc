@@ -80,10 +80,10 @@ MDBX_Env::MDBX_Env(const Napi::CallbackInfo &info) : Napi::ObjectWrap<MDBX_Env>(
 	if (info[1].IsObject()) {
 		Napi::Object options = info[1].ToObject();
 
-		if (options.Get("maxdbs").IsNumber()) {
-			MDBX_dbi maxdbs = options.Get("maxdbs").ToNumber().Uint32Value();
+		if (options.Get("maxDbs").IsNumber()) {
+			MDBX_dbi maxDbs = options.Get("maxDbs").ToNumber().Uint32Value();
 
-			rc = mdbx_env_set_maxdbs(this->env, maxdbs);
+			rc = mdbx_env_set_maxdbs(this->env, maxDbs);
 			if (rc) {
 				Utils::throwMdbxError(info.Env(), rc);
 				return;

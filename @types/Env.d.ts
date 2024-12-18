@@ -30,7 +30,7 @@ export interface EnvGeometry {
 
 export interface EnvOptions {
     mode?: number;
-    maxdbs?: number;
+    maxDbs?: number;
     flags?: EnvFlags;
     geometry?: EnvGeometry;
 }

@@ -19,7 +19,7 @@
 /// \author Леонид Юрьев aka Leonid Yuriev <leo@yuriev.ru> \date 2015-2024
 
 
-#define MDBX_BUILD_SOURCERY f99d49e319bbfaafc27f8148ae5bf6730c3c48eec53d44f9214be422992a588f_v0_13_2_6_ga845522d
+#define MDBX_BUILD_SOURCERY 353e3f40cae23d4a358197591da270646e94313ed966832150eb1b639d80a7e4_v0_13_2_18_g0d1c0867
 
 
 #define LIBMDBX_INTERNALS
@@ -1173,12 +1173,12 @@ typedef pthread_mutex_t osal_fastmutex_t;
 #endif /* Platform */
 
 #if __GLIBC_PREREQ(2, 12) || defined(__FreeBSD__) || defined(malloc_usable_size)
-/* malloc_usable_size() already provided */
+#define osal_malloc_usable_size(ptr) malloc_usable_size(ptr)
 #elif defined(__APPLE__)
-#define malloc_usable_size(ptr) malloc_size(ptr)
+#define osal_malloc_usable_size(ptr) malloc_size(ptr)
 #elif defined(_MSC_VER) && !MDBX_WITHOUT_MSVC_CRT
-#define malloc_usable_size(ptr) _msize(ptr)
-#endif /* malloc_usable_size */
+#define osal_malloc_usable_size(ptr) _msize(ptr)
+#endif /* osal_malloc_usable_size */
 
 /*----------------------------------------------------------------------------*/
 /* OS abstraction layer stuff */
@@ -2278,7 +2278,7 @@ typedef struct tree {
   uint16_t height;      /* height of this tree */
   uint32_t dupfix_size; /* key-size for MDBX_DUPFIXED (DUPFIX pages) */
   pgno_t root;          /* the root page of this tree */
-  pgno_t branch_pages;  /* number of internal pages */
+  pgno_t branch_pages;  /* number of branch pages */
   pgno_t leaf_pages;    /* number of leaf pages */
   pgno_t large_pages;   /* number of large pages */
   uint64_t sequence;    /* table sequence counter */
@@ -2548,6 +2548,12 @@ typedef struct gc_prof_stat {
   uint32_t spe_counter;
   /* page faults (hard page faults) */
   uint32_t majflt;
+  /* Для разборок с pnl_merge() */
+  struct {
+    uint64_t time;
+    uint64_t volume;
+    uint32_t calls;
+  } pnl_merge;
 } gc_prof_stat_t;
 
 /* Statistics of pages operations for all transactions,
@@ -2980,27 +2986,12 @@ MDBX_INTERNAL const char *pagetype_caption(const uint8_t type, char buf4unknown[
 #define DVAL_DEBUG(x) ("-")
 #endif
 
-MDBX_INTERNAL int log_error(const int err, const char *func, unsigned line);
+MDBX_INTERNAL void log_error(const int err, const char *func, unsigned line);
 
 MDBX_MAYBE_UNUSED static inline int log_if_error(const int err, const char *func, unsigned line) {
-  if (likely(err == MDBX_SUCCESS))
-    return err;
-  int rc = log_error(err, func, line);
-#if __has_c_attribute(assume)
-  [[assume(rc == err && rc != MDBX_SUCCESS)]];
-#endif
-#if defined(__clang__) || __has_builtin(assume)
-  __builtin_assume(rc == err && rc != MDBX_SUCCESS);
-#endif
-  if (rc != err || rc == MDBX_SUCCESS) {
-#if defined(__GNUC__)
-    __builtin_unreachable();
-#elif defined(_MSC_VER) && !defined(__clang__)
-    __assume(0);
-#endif
-    rc = err;
-  }
-  return rc;
+  if (unlikely(err != MDBX_SUCCESS))
+    log_error(err, func, line);
+  return err;
 }
 
 #define LOG_IFERR(err) log_if_error((err), __func__, __LINE__)

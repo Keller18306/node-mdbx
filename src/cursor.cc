@@ -33,6 +33,8 @@ void MDBX_Cursor::Init(Napi::Env env) {
 			InstanceMethod("getValue", &MDBX_Cursor::GetValue),
 
 			InstanceMethod("count", &MDBX_Cursor::Count),
+			InstanceMethod("dupStat", &MDBX_Cursor::DupStat),
+
 			InstanceMethod("first", &MDBX_Cursor::First),
 			InstanceMethod("firstDup", &MDBX_Cursor::FirstDup),
 			InstanceMethod("last", &MDBX_Cursor::Last),
@@ -186,6 +188,22 @@ Napi::Value MDBX_Cursor::Count(const Napi::CallbackInfo &info) {
 	}
 
 	return Napi::Number::New(info.Env(), count);
+}
+
+Napi::Value MDBX_Cursor::DupStat(const Napi::CallbackInfo &info) {
+	MDBX_stat stat;
+
+	if (!(this->dbiFlags & MDBX_DUPSORT)) {
+		return Utils::Error(info.Env(), "Dbi is not MDB_DUPSORT");
+	}
+
+	int rc = mdbx_cursor_count_ex(this->cursor, nullptr, &stat, sizeof(stat));
+	if (rc) {
+		Utils::throwMdbxError(info.Env(), rc);
+		return info.Env().Undefined();
+	}
+
+	return Utils::mdbxStatToJsObject(info.Env(), stat);
 }
 
 Napi::Value MDBX_Cursor::_commonMove(const Napi::CallbackInfo &info, MDBX_cursor_op op, bool checkDupFlag) {

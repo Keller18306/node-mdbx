@@ -1,3 +1,4 @@
+import { Stat } from "./Stat";
 import { Txn } from "./Txn";
 
 export declare type CursorValue = Buffer | string | number | bigint;
@@ -63,15 +64,16 @@ export type DataTypeMap = {
     bigint: bigint;
 };
 
-export type ResolveCursorDataType<T extends CursorValueType | undefined, TDefault extends CursorValue = Buffer> =
+export type ResolveCursorDataType<T extends CursorValueType | undefined, TDefault extends CursorValue> =
     T extends keyof DataTypeMap ? DataTypeMap[T] : TDefault;
 
 export declare interface Cursor<TKey extends CursorValue = Buffer, TValue extends CursorValue = Buffer> {
     getKey(): TKey;
     getValue(): TValue;
 
-    // info(): any;
     count(): number;
+    dupStat(): Stat;
+
     first(): TKey;
     firstDup(): TKey;
     last(): TKey;

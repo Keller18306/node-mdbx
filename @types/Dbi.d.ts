@@ -23,9 +23,12 @@ export interface DbiDropOptions {
 export declare interface Dbi {
     stat(txn?: Txn): Stat;
 
-    getCursor<TKey extends CursorValueType = 'buffer', TValue extends CursorValueType = 'buffer'>(
+    getCursor<TKey extends CursorValueType | undefined = undefined, TValue extends CursorValueType | undefined = undefined>(
         options: CursorOptions & { keyType?: TKey; dataType?: TValue }
-    ): Cursor<ResolveCursorDataType<TKey>, ResolveCursorDataType<TValue>>;
+    ): Cursor<
+        ResolveCursorDataType<TKey, Buffer>,
+        ResolveCursorDataType<TValue, Buffer>
+    >;
 
     drop(options?: DbiDropOptions): void;
     rename(name: string, txn?: Txn): void;

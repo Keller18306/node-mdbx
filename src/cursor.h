@@ -26,6 +26,7 @@ class MDBX_Cursor : public Napi::ObjectWrap<MDBX_Cursor> {
 	Napi::Value GetValue(const Napi::CallbackInfo &info);
 
 	Napi::Value Count(const Napi::CallbackInfo &info);
+	Napi::Value DupStat(const Napi::CallbackInfo &info);
 
 	Napi::Value First(const Napi::CallbackInfo &info);
 	Napi::Value FirstDup(const Napi::CallbackInfo &info);

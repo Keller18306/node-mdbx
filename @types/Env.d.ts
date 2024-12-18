@@ -41,6 +41,17 @@ export interface GcInfo {
     reclaimable: number;
 }
 
+export interface ReaderInfo {
+    num: number;
+    slot: number;
+    pid: number;
+    thread: number;
+    txnid: number;
+    lag: number;
+    bytes_used: number;
+    bytes_retained: number;
+}
+
 export declare class Env {
     constructor(options: EnvOptions);
 
@@ -49,5 +60,6 @@ export declare class Env {
     public getDbi(name: CursorValue | null, options?: DbiOptions): Dbi;
     public getTxn(options?: TxnOptions): Txn;
     public gcInfo(txn: Txn): GcInfo;
+    public readers(): ReaderInfo[];
     public close(): void;
 }

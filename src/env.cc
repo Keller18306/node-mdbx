@@ -12,6 +12,7 @@ void MDBX_Env::Init(Napi::Env env, Napi::Object exports) {
 			InstanceMethod("getDbi", &MDBX_Env::GetDbi),
 			InstanceMethod("getTxn", &MDBX_Env::GetTxn),
 			InstanceMethod("gcInfo", &MDBX_Env::GcInfo),
+			InstanceMethod("readers", &MDBX_Env::Readers),
 			InstanceMethod("close", &MDBX_Env::Close),
 		});
 
@@ -315,6 +316,49 @@ Napi::Value MDBX_Env::GcInfo(const Napi::CallbackInfo &info) {
 	obj.Set("reclaimable", reclaimable);
 
 	return obj;
+}
+
+Napi::Value MDBX_Env::Readers(const Napi::CallbackInfo &info) {
+	Napi::Env env = info.Env();
+
+	// Создаём массив для результатов
+	Napi::Array array = Napi::Array::New(env);
+
+	// Контекст для передачи данных в callback
+	struct CallbackContext {
+		Napi::Env env;
+		Napi::Array *array;
+		uint32_t index;
+	} ctx = {env, &array, 0};
+
+	auto readerCallback = [](void *ctx, int num, int slot, mdbx_pid_t pid, mdbx_tid_t thread, uint64_t txnid, uint64_t lag, size_t bytes_used,
+							  size_t bytes_retained) noexcept -> int {
+		auto *callbackContext = static_cast<CallbackContext *>(ctx);
+		Napi::Env env = callbackContext->env;
+
+		Napi::Object obj = Napi::Object::New(env);
+		obj.Set("num", num);
+		obj.Set("slot", slot);
+		obj.Set("pid", static_cast<uint32_t>(pid));
+		obj.Set("thread", static_cast<uint64_t>(thread));
+		obj.Set("txnid", txnid);
+		obj.Set("lag", lag);
+		obj.Set("bytes_used", static_cast<uint64_t>(bytes_used));
+		obj.Set("bytes_retained", static_cast<uint64_t>(bytes_retained));
+
+		callbackContext->array->Set(callbackContext->index++, obj);
+
+		return MDBX_RESULT_TRUE;
+	};
+
+	// Вызываем mdbx_reader_list с нашим callback
+	int rc = mdbx_reader_list(this->env, readerCallback, &ctx);
+	if (rc != 0 && rc != MDBX_RESULT_TRUE) {
+		Utils::throwMdbxError(env, rc);
+		return env.Undefined();
+	}
+
+	return array; // Возвращаем массив
 }
 
 void MDBX_Env::Close(const Napi::CallbackInfo &info) {

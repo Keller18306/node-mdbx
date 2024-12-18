@@ -14,7 +14,6 @@ class MDBX_Txn : public Napi::ObjectWrap<MDBX_Txn> {
 
   public:
 	MDBX_txn *txn = nullptr;
-	static Napi::FunctionReference constructor;
 
 	static void Init(Napi::Env env);
 	MDBX_Txn(const Napi::CallbackInfo &info);

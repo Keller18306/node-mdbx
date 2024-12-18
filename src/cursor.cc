@@ -1,6 +1,5 @@
 #include "cursor.h"
 
-Napi::FunctionReference MDBX_Cursor::constructor;
 #include "txn.h"
 
 ValueType strToKeyTypeNum(std::string str) {
@@ -57,8 +56,12 @@ void MDBX_Cursor::Init(Napi::Env env) {
 			InstanceMethod("close", &MDBX_Cursor::Close),
 		});
 
-	constructor = Napi::Persistent(func);
-	constructor.SuppressDestruct();
+	Napi::FunctionReference *constructor = new Napi::FunctionReference();
+	*constructor = Napi::Persistent(func);
+	// constructor->SuppressDestruct();
+
+	EnvInstanceData *instanceData = Utils::envInstanceData(env);
+	instanceData->cursor = constructor;
 }
 
 MDBX_Cursor::MDBX_Cursor(const Napi::CallbackInfo &info) : Napi::ObjectWrap<MDBX_Cursor>(info) {

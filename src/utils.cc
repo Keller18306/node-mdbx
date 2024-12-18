@@ -181,8 +181,9 @@ void Utils::stringToLower(std::string &str) {
 
 MDBX_txn *Utils::argToMdbxTxn(Napi::Env env, Napi::Value arg) {
 	Napi::Object txnObj = arg.ToObject();
+	EnvInstanceData *instanceData = Utils::envInstanceData(env);
 
-	if (txnObj.InstanceOf(MDBX_Txn::constructor.Value())) {
+	if (txnObj.InstanceOf(instanceData->txn->Value())) {
 		MDBX_Txn *txnClass = Napi::ObjectWrap<MDBX_Txn>::Unwrap(txnObj);
 
 		return txnClass->txn;
@@ -190,4 +191,15 @@ MDBX_txn *Utils::argToMdbxTxn(Napi::Env env, Napi::Value arg) {
 		throw Napi::TypeError::New(env, "Invalid Txn: not an instance of Txn");
 		// .ThrowAsJavaScriptException();
 	}
+}
+
+EnvInstanceData *Utils::envInstanceData(Napi::Env env) {
+	EnvInstanceData *instanceData = env.GetInstanceData<EnvInstanceData>();
+
+	if (!instanceData) {
+		instanceData = new EnvInstanceData();
+		env.SetInstanceData<EnvInstanceData>(instanceData);
+	}
+
+	return instanceData;
 }

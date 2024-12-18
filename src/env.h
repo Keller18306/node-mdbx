@@ -5,7 +5,6 @@ class MDBX_Env : public Napi::ObjectWrap<MDBX_Env> {
   private:
 	MDBX_env *env = nullptr;
 
-	// Napi::Value Test(const Napi::CallbackInfo &info);
 	Napi::Value Info(const Napi::CallbackInfo &info);
 	Napi::Value Stat(const Napi::CallbackInfo &info);
 	Napi::Value GetDbi(const Napi::CallbackInfo &info);

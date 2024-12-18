@@ -13,8 +13,6 @@ class MDBX_Dbi : public Napi::ObjectWrap<MDBX_Dbi> {
 	void Close(const Napi::CallbackInfo &info);
 
   public:
-	static Napi::FunctionReference constructor;
-
 	static void Init(Napi::Env env);
 	MDBX_Dbi(const Napi::CallbackInfo &info);
 	~MDBX_Dbi();

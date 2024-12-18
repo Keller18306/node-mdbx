@@ -3,8 +3,6 @@
 #include "cursor.h"
 #include "txn.h"
 
-Napi::FunctionReference MDBX_Dbi::constructor;
-
 void MDBX_Dbi::Init(Napi::Env env) {
 	Napi::HandleScope scope(env);
 
@@ -17,8 +15,12 @@ void MDBX_Dbi::Init(Napi::Env env) {
 			InstanceMethod("close", &MDBX_Dbi::Close),
 		});
 
-	constructor = Napi::Persistent(func);
-	constructor.SuppressDestruct();
+	Napi::FunctionReference *constructor = new Napi::FunctionReference();
+	*constructor = Napi::Persistent(func);
+	// constructor->SuppressDestruct();
+
+	EnvInstanceData *instanceData = Utils::envInstanceData(env);
+	instanceData->dbi = constructor;
 }
 
 MDBX_Dbi::MDBX_Dbi(const Napi::CallbackInfo &info) : Napi::ObjectWrap<MDBX_Dbi>(info) {
@@ -175,6 +177,7 @@ Napi::Value MDBX_Dbi::Stat(const Napi::CallbackInfo &info) {
 
 Napi::Value MDBX_Dbi::GetCursor(const Napi::CallbackInfo &info) {
 	Napi::Env env = info.Env();
+	EnvInstanceData *instanceData = Utils::envInstanceData(env);
 
 	Napi::External<MDBX_env> externalEnv = Napi::External<MDBX_env>::New(env, this->env);
 	Napi::External<MDBX_dbi> externalDbi = Napi::External<MDBX_dbi>::New(env, &this->dbi);
@@ -184,7 +187,7 @@ Napi::Value MDBX_Dbi::GetCursor(const Napi::CallbackInfo &info) {
 		options = info[0].ToObject();
 	}
 
-	return MDBX_Cursor::constructor.New({externalEnv, externalDbi, options});
+	return instanceData->cursor->New({externalEnv, externalDbi, options});
 }
 
 void MDBX_Dbi::Rename(const Napi::CallbackInfo &info) {

@@ -239,6 +239,7 @@ Napi::Value MDBX_Env::Stat(const Napi::CallbackInfo &info) {
 
 Napi::Value MDBX_Env::GetDbi(const Napi::CallbackInfo &info) {
 	Napi::Env env = info.Env();
+	EnvInstanceData *instanceData = Utils::envInstanceData(env);
 
 	Napi::Value name = info[0];
 
@@ -254,11 +255,12 @@ Napi::Value MDBX_Env::GetDbi(const Napi::CallbackInfo &info) {
 		options = info[1].ToObject();
 	}
 
-	return MDBX_Dbi::constructor.New({externalEnv, name, options});
+	return instanceData->dbi->New({externalEnv, name, options});
 }
 
 Napi::Value MDBX_Env::GetTxn(const Napi::CallbackInfo &info) {
 	Napi::Env env = info.Env();
+	EnvInstanceData *instanceData = Utils::envInstanceData(env);
 
 	Napi::External<MDBX_env> externalEnv = Napi::External<MDBX_env>::New(env, this->env);
 
@@ -267,7 +269,7 @@ Napi::Value MDBX_Env::GetTxn(const Napi::CallbackInfo &info) {
 		options = info[0].ToObject();
 	}
 
-	return MDBX_Txn::constructor.New({externalEnv, options});
+	return instanceData->txn->New({externalEnv, options});
 }
 
 Napi::Value MDBX_Env::GcInfo(const Napi::CallbackInfo &info) {

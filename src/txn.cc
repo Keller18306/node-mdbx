@@ -2,8 +2,6 @@
 
 #include "utils.h"
 
-Napi::FunctionReference MDBX_Txn::constructor;
-
 void MDBX_Txn::Init(Napi::Env env) {
 	Napi::Function func = DefineClass(env, "MDBXTxn",
 		{
@@ -16,8 +14,12 @@ void MDBX_Txn::Init(Napi::Env env) {
 			InstanceMethod("renew", &MDBX_Txn::Renew),
 		});
 
-	constructor = Napi::Persistent(func);
-	constructor.SuppressDestruct();
+	Napi::FunctionReference *constructor = new Napi::FunctionReference();
+	*constructor = Napi::Persistent(func);
+	// constructor->SuppressDestruct();
+
+	EnvInstanceData *instanceData = Utils::envInstanceData(env);
+	instanceData->txn = constructor;
 }
 
 MDBX_Txn::MDBX_Txn(const Napi::CallbackInfo &info) : Napi::ObjectWrap<MDBX_Txn>(info) {
@@ -50,15 +52,10 @@ MDBX_Txn::MDBX_Txn(const Napi::CallbackInfo &info) : Napi::ObjectWrap<MDBX_Txn>(
 
 		Napi::Value parentTxnValue = options.Get("parentTxn");
 		if (parentTxnValue.IsObject()) {
-			Napi::Object parentTxnObj = parentTxnValue.ToObject();
-
-			if (parentTxnObj.InstanceOf(MDBX_Txn::constructor.Value())) {
-				MDBX_Txn *parentTxnClass = Napi::ObjectWrap<MDBX_Txn>::Unwrap(parentTxnObj);
-
-				parentTxn = parentTxnClass->txn;
-			} else {
-				Napi::TypeError::New(info.Env(), "Invalid parentTxn: not an instance of Txn").ThrowAsJavaScriptException();
-
+			try {
+				parentTxn = Utils::argToMdbxTxn(info.Env(), parentTxnValue);
+			} catch (const Napi::Error &e) {
+				e.ThrowAsJavaScriptException();
 				return;
 			}
 		}

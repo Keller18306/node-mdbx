@@ -53,8 +53,6 @@ class MDBX_Cursor : public Napi::ObjectWrap<MDBX_Cursor> {
 	Napi::Value _commonSet(const Napi::CallbackInfo &info, MDBX_cursor_op opKeyOnly, MDBX_cursor_op opKeyValue);
 
   public:
-	static Napi::FunctionReference constructor;
-
 	static void Init(Napi::Env env);
 	MDBX_Cursor(const Napi::CallbackInfo &info);
 	~MDBX_Cursor();

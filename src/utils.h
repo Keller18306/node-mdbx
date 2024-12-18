@@ -10,6 +10,12 @@ enum ValueType {
 	ValueType_BigInt,
 };
 
+struct EnvInstanceData {
+	Napi::FunctionReference *dbi;
+	Napi::FunctionReference *txn;
+	Napi::FunctionReference *cursor;
+};
+
 class Utils {
   public:
 	static uint32_t toBigEndian(uint32_t value);
@@ -25,4 +31,5 @@ class Utils {
 	static void setFromObject(long *longSetter, Napi::Object flagsObj, const char *objValue, long defaultValue);
 	static void stringToLower(std::string &str);
 	static MDBX_txn *argToMdbxTxn(Napi::Env env, Napi::Value arg);
+	static EnvInstanceData *envInstanceData(Napi::Env env);
 };

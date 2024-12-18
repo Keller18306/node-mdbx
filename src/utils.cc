@@ -169,7 +169,7 @@ void Utils::setFromObject(long *longSetter, Napi::Object flagsObj, const char *o
 	Napi::Value value = flagsObj.Get(objValue);
 
 	if (value.IsNumber()) {
-		*longSetter = value.ToNumber().Int32Value();
+		*longSetter = value.ToNumber().Int64Value();
 	} else {
 		*longSetter = defaultValue;
 	}

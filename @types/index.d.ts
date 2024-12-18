@@ -7,5 +7,6 @@ export * from './Info';
 export * from './Stat';
 export * from './Txn';
 export * from './Version';
+export * from './Errors';
 
 export as namespace MDBX;

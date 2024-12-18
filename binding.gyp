@@ -12,6 +12,7 @@
         "src/dbi.cc",
         "src/cursor.cc",
         "src/version.cc",
+        "src/errors.cc",
         "src/utils.cc"
       ],
       "include_dirs": [

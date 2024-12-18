@@ -63,8 +63,8 @@ export type DataTypeMap = {
     bigint: bigint;
 };
 
-export type ResolveCursorDataType<T extends CursorValueType | undefined> =
-    T extends keyof DataTypeMap ? DataTypeMap[T] : CursorValue;
+export type ResolveCursorDataType<T extends CursorValueType | undefined, TDefault extends CursorValue = Buffer> =
+    T extends keyof DataTypeMap ? DataTypeMap[T] : TDefault;
 
 export declare interface Cursor<TKey extends CursorValue = Buffer, TValue extends CursorValue = Buffer> {
     getKey(): TKey;

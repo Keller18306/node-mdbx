@@ -29,6 +29,7 @@ export interface EnvGeometry {
 }
 
 export interface EnvOptions {
+    path: string;
     mode?: number;
     maxDbs?: number;
     flags?: EnvFlags;
@@ -41,7 +42,7 @@ export interface GcInfo {
 }
 
 export declare class Env {
-    constructor(path: string, options: EnvOptions);
+    constructor(options: EnvOptions);
 
     public info(): Info;
     public stat(): Stat;

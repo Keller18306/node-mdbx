@@ -26,11 +26,17 @@ MDBX_Env::MDBX_Env(const Napi::CallbackInfo &info) : Napi::ObjectWrap<MDBX_Env>(
 	int rc = MDBX_SUCCESS;
 	unsigned int flags = MDBX_ENV_DEFAULTS;
 	mdbx_mode_t mode = 644;
+	std::string path;
 
-	std::string path = info[0].ToString().Utf8Value();
+	if (info[0].IsObject()) {
+		Napi::Object options = info[0].ToObject();
 
-	if (info[1].IsObject()) {
-		Napi::Object options = info[1].ToObject();
+		if (options.Get("path").IsString()) {
+			path = options.Get("path").ToString();
+		} else {
+			Napi::Error::New(info.Env(), "Env path is not defined");
+			return;
+		}
 
 		if (options.Get("mode").IsNumber()) {
 			Napi::Number numMode = options.Get("mode").ToNumber();
@@ -77,8 +83,8 @@ MDBX_Env::MDBX_Env(const Napi::CallbackInfo &info) : Napi::ObjectWrap<MDBX_Env>(
 		return;
 	}
 
-	if (info[1].IsObject()) {
-		Napi::Object options = info[1].ToObject();
+	if (info[0].IsObject()) {
+		Napi::Object options = info[0].ToObject();
 
 		if (options.Get("maxDbs").IsNumber()) {
 			MDBX_dbi maxDbs = options.Get("maxDbs").ToNumber().Uint32Value();

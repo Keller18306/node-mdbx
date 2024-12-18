@@ -97,6 +97,16 @@ MDBX_Env::MDBX_Env(const Napi::CallbackInfo &info) : Napi::ObjectWrap<MDBX_Env>(
 			}
 		}
 
+		if (options.Get("maxReaders").IsNumber()) {
+			unsigned int maxReaders = options.Get("maxReaders").ToNumber().Uint32Value();
+
+			rc = mdbx_env_set_maxreaders(this->env, maxReaders);
+			if (rc) {
+				Utils::throwMdbxError(info.Env(), rc);
+				return;
+			}
+		}
+
 		if (options.Get("geometry").IsObject()) {
 			Napi::Object geometry = options.Get("geometry").ToObject();
 

@@ -32,6 +32,7 @@ export interface EnvOptions {
     path: string;
     mode?: number;
     maxDbs?: number;
+    maxReaders?: number;
     flags?: EnvFlags;
     geometry?: EnvGeometry;
 }

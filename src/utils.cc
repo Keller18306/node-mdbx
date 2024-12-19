@@ -165,6 +165,14 @@ void Utils::setFromObject(unsigned int *flagsSetter, int flag, Napi::Object flag
 	}
 }
 
+void Utils::setFromObject(int *flagsSetter, int flag, Napi::Object flagsObj, const char *objValue) {
+	Napi::Value value = flagsObj.Get(objValue);
+
+	if (value.IsBoolean() && value.ToBoolean().Value()) {
+		*flagsSetter |= flag;
+	}
+}
+
 void Utils::setFromObject(long *longSetter, Napi::Object flagsObj, const char *objValue, long defaultValue) {
 	Napi::Value value = flagsObj.Get(objValue);
 

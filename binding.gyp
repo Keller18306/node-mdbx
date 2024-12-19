@@ -13,6 +13,7 @@
         "src/cursor.cc",
         "src/version.cc",
         "src/errors.cc",
+        "src/debug.cc",
         "src/utils.cc"
       ],
       "include_dirs": [

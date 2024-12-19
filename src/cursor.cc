@@ -251,7 +251,7 @@ Napi::Value MDBX_Cursor::_commonSet(const Napi::CallbackInfo &info, MDBX_cursor_
 	try {
 		key = Utils::argToMdbxValue(env, info[0], this->_keyBuffer);
 
-		if (info.Length() >= 2) {
+		if (!info[1].IsUndefined()) {
 			if (!(this->dbiFlags & MDBX_DUPSORT)) {
 				return Utils::Error(env, "Dbi is not MDB_DUPSORT");
 			}

@@ -1,5 +1,7 @@
 #include "utils.h"
 
+#include <iterator>
+
 #include "txn.h"
 
 uint32_t Utils::toBigEndian(uint32_t value) {
@@ -173,7 +175,7 @@ void Utils::setFromObject(int *flagsSetter, int flag, Napi::Object flagsObj, con
 	}
 }
 
-void Utils::setFromObject(long *longSetter, Napi::Object flagsObj, const char *objValue, long defaultValue) {
+void Utils::setFromObject(intptr_t *longSetter, Napi::Object flagsObj, const char *objValue, long defaultValue) {
 	Napi::Value value = flagsObj.Get(objValue);
 
 	if (value.IsNumber()) {

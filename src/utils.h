@@ -29,7 +29,7 @@ class Utils {
 	static MDBX_val argToMdbxValue(Napi::Env env, Napi::Value arg, buffer_t &_buffer);
 	static void setFromObject(unsigned int *flagsSetter, int flag, Napi::Object flagsObj, const char *objValue);
 	static void setFromObject(int *flagsSetter, int flag, Napi::Object flagsObj, const char *objValue);
-	static void setFromObject(long *longSetter, Napi::Object flagsObj, const char *objValue, long defaultValue);
+	static void setFromObject(intptr_t *longSetter, Napi::Object flagsObj, const char *objValue, long defaultValue);
 	static void stringToLower(std::string &str);
 	static MDBX_txn *argToMdbxTxn(Napi::Env env, Napi::Value arg);
 	static EnvInstanceData *envInstanceData(Napi::Env env);

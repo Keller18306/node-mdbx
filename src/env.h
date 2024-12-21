@@ -1,9 +1,19 @@
+#include <map>
 #include <mdbx.h>
+#include <mutex>
 #include <napi.h>
+#include <string>
 
 class MDBX_Env : public Napi::ObjectWrap<MDBX_Env> {
   private:
-	MDBX_env *env = nullptr;
+	static std::map<std::string, std::shared_ptr<MDBX_env>> envMap;
+	static std::mutex mutex;
+
+	static std::shared_ptr<MDBX_env> createSharedEnv(const std::string &path, std::function<void(MDBX_env *)> configure);
+	static void deleteSharedEnv(const std::string &path);
+
+	std::string path;
+	std::shared_ptr<MDBX_env> env;
 
 	Napi::Value Info(const Napi::CallbackInfo &info);
 	Napi::Value Stat(const Napi::CallbackInfo &info);

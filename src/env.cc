@@ -1,8 +1,50 @@
 #include "env.h"
 
+#include <filesystem>
+
 #include "dbi.h"
 #include "txn.h"
 #include "utils.h"
+
+std::mutex MDBX_Env::mutex;
+std::map<std::string, std::shared_ptr<MDBX_env>> MDBX_Env::envMap;
+
+std::shared_ptr<MDBX_env> MDBX_Env::createSharedEnv(const std::string &path, std::function<void(MDBX_env *)> configure) {
+	std::lock_guard<std::mutex> lock(MDBX_Env::mutex);
+	auto &map = MDBX_Env::envMap;
+
+	if (map.find(path) != map.end()) {
+		return map[path];
+	}
+
+	MDBX_env *rawEnv = nullptr;
+	int rc = mdbx_env_create(&rawEnv);
+	if (rc != MDBX_SUCCESS) {
+		throw std::runtime_error("Failed to create MDBX_env");
+	}
+
+	if (configure) {
+		configure(rawEnv);
+	}
+
+	std::shared_ptr<MDBX_env> sharedEnv(rawEnv, [](MDBX_env *env) {
+		if (env) {
+			// mdbx_env_close(env);
+		}
+	});
+
+	map[path] = sharedEnv;
+	return sharedEnv;
+}
+
+void MDBX_Env::deleteSharedEnv(const std::string &path) {
+	std::lock_guard<std::mutex> lock(MDBX_Env::mutex);
+	auto &map = MDBX_Env::envMap;
+	auto it = map.find(path);
+	if (it != map.end()) {
+		map.erase(it);
+	}
+}
 
 void MDBX_Env::Init(Napi::Env env, Napi::Object exports) {
 	Napi::Function func = DefineClass(env, "MDBXEnv",
@@ -16,27 +58,63 @@ void MDBX_Env::Init(Napi::Env env, Napi::Object exports) {
 			InstanceMethod("close", &MDBX_Env::Close),
 		});
 
-	// Napi::FunctionReference *constructor = new Napi::FunctionReference();
-	// *constructor = Napi::Persistent(func);
-	// env.SetInstanceData(constructor);
-
 	exports.Set("Env", func);
 }
 
 MDBX_Env::MDBX_Env(const Napi::CallbackInfo &info) : Napi::ObjectWrap<MDBX_Env>(info) {
-	int rc = MDBX_SUCCESS;
-	unsigned int flags = MDBX_ENV_DEFAULTS;
-	mdbx_mode_t mode = 644;
-	std::string path;
+	Napi::Object options = info[0].ToObject();
 
-	if (info[0].IsObject()) {
+	if (options.Get("path").IsString()) {
+		this->path = std::filesystem::canonical(options.Get("path").ToString().Utf8Value()).string();
+	} else {
+		Napi::Error::New(info.Env(), "Env path is not defined").ThrowAsJavaScriptException();
+		return;
+	}
+
+	this->env = MDBX_Env::createSharedEnv(this->path, [&](MDBX_env *env) {
+		int rc = MDBX_SUCCESS;
+		unsigned int flags = MDBX_ENV_DEFAULTS;
+		mdbx_mode_t mode = 644;
+
 		Napi::Object options = info[0].ToObject();
 
-		if (options.Get("path").IsString()) {
-			path = options.Get("path").ToString();
-		} else {
-			Napi::Error::New(info.Env(), "Env path is not defined");
-			return;
+		if (options.Get("maxDbs").IsNumber()) {
+			MDBX_dbi maxDbs = options.Get("maxDbs").ToNumber().Uint32Value();
+
+			rc = mdbx_env_set_maxdbs(env, maxDbs);
+			if (rc) {
+				Utils::throwMdbxError(info.Env(), rc);
+				return;
+			}
+		}
+
+		if (options.Get("maxReaders").IsNumber()) {
+			unsigned int maxReaders = options.Get("maxReaders").ToNumber().Uint32Value();
+
+			rc = mdbx_env_set_maxreaders(env, maxReaders);
+			if (rc) {
+				Utils::throwMdbxError(info.Env(), rc);
+				return;
+			}
+		}
+
+		if (options.Get("geometry").IsObject()) {
+			Napi::Object geometry = options.Get("geometry").ToObject();
+
+			intptr_t size_lower, size_now, size_upper, growth_step, shrink_threshold, pagesize;
+
+			Utils::setFromObject(&size_lower, geometry, "sizeLower", -1);
+			Utils::setFromObject(&size_now, geometry, "sizeNow", -1);
+			Utils::setFromObject(&size_upper, geometry, "sizeUpper", -1);
+			Utils::setFromObject(&growth_step, geometry, "growthStep", -1);
+			Utils::setFromObject(&shrink_threshold, geometry, "shrinkThreshold", -1);
+			Utils::setFromObject(&pagesize, geometry, "pageSize", -1);
+
+			rc = mdbx_env_set_geometry(env, size_lower, size_now, size_upper, growth_step, shrink_threshold, pagesize);
+			if (rc) {
+				Utils::throwMdbxError(info.Env(), rc);
+				return;
+			}
 		}
 
 		if (options.Get("mode").IsNumber()) {
@@ -76,69 +154,20 @@ MDBX_Env::MDBX_Env(const Napi::CallbackInfo &info) : Napi::ObjectWrap<MDBX_Env>(
 				}
 			}
 		}
-	}
 
-	rc = mdbx_env_create(&this->env);
-	if (rc) {
-		Utils::throwMdbxError(info.Env(), rc);
-		return;
-	}
-
-	if (info[0].IsObject()) {
-		Napi::Object options = info[0].ToObject();
-
-		if (options.Get("maxDbs").IsNumber()) {
-			MDBX_dbi maxDbs = options.Get("maxDbs").ToNumber().Uint32Value();
-
-			rc = mdbx_env_set_maxdbs(this->env, maxDbs);
-			if (rc) {
-				Utils::throwMdbxError(info.Env(), rc);
-				return;
-			}
+		rc = mdbx_env_open(env, path.c_str(), static_cast<MDBX_env_flags>(flags), mode);
+		if (rc) {
+			Utils::throwMdbxError(info.Env(), rc);
+			return;
 		}
-
-		if (options.Get("maxReaders").IsNumber()) {
-			unsigned int maxReaders = options.Get("maxReaders").ToNumber().Uint32Value();
-
-			rc = mdbx_env_set_maxreaders(this->env, maxReaders);
-			if (rc) {
-				Utils::throwMdbxError(info.Env(), rc);
-				return;
-			}
-		}
-
-		if (options.Get("geometry").IsObject()) {
-			Napi::Object geometry = options.Get("geometry").ToObject();
-
-			intptr_t size_lower, size_now, size_upper, growth_step, shrink_threshold, pagesize;
-
-			Utils::setFromObject(&size_lower, geometry, "sizeLower", -1);
-			Utils::setFromObject(&size_now, geometry, "sizeNow", -1);
-			Utils::setFromObject(&size_upper, geometry, "sizeUpper", -1);
-			Utils::setFromObject(&growth_step, geometry, "growthStep", -1);
-			Utils::setFromObject(&shrink_threshold, geometry, "shrinkThreshold", -1);
-			Utils::setFromObject(&pagesize, geometry, "pageSize", -1);
-
-			rc = mdbx_env_set_geometry(this->env, size_lower, size_now, size_upper, growth_step, shrink_threshold, pagesize);
-			if (rc) {
-				Utils::throwMdbxError(info.Env(), rc);
-				return;
-			}
-		}
-	}
-
-	rc = mdbx_env_open(this->env, path.c_str(), static_cast<MDBX_env_flags>(flags), mode);
-	if (rc) {
-		Utils::throwMdbxError(info.Env(), rc);
-		return;
-	}
+	});
 }
 
 Napi::Value MDBX_Env::Info(const Napi::CallbackInfo &info) {
 	Napi::Env env = info.Env();
 	MDBX_envinfo envinfo;
 
-	int rc = mdbx_env_info_ex(this->env, nullptr, &envinfo, sizeof(envinfo));
+	int rc = mdbx_env_info_ex(this->env.get(), nullptr, &envinfo, sizeof(envinfo));
 	if (rc) {
 		Utils::throwMdbxError(env, rc);
 
@@ -227,7 +256,7 @@ Napi::Value MDBX_Env::Info(const Napi::CallbackInfo &info) {
 Napi::Value MDBX_Env::Stat(const Napi::CallbackInfo &info) {
 	MDBX_stat stat;
 
-	int rc = mdbx_env_stat_ex(this->env, nullptr, &stat, sizeof(stat));
+	int rc = mdbx_env_stat_ex(this->env.get(), nullptr, &stat, sizeof(stat));
 	if (rc) {
 		Utils::throwMdbxError(info.Env(), rc);
 
@@ -248,7 +277,7 @@ Napi::Value MDBX_Env::GetDbi(const Napi::CallbackInfo &info) {
 		return env.Undefined();
 	}
 
-	Napi::External<MDBX_env> externalEnv = Napi::External<MDBX_env>::New(env, this->env);
+	Napi::External<MDBX_env> externalEnv = Napi::External<MDBX_env>::New(env, this->env.get());
 
 	Napi::Object options = Napi::Object::New(env);
 	if (info[1].IsObject()) {
@@ -262,7 +291,7 @@ Napi::Value MDBX_Env::GetTxn(const Napi::CallbackInfo &info) {
 	Napi::Env env = info.Env();
 	EnvInstanceData *instanceData = Utils::envInstanceData(env);
 
-	Napi::External<MDBX_env> externalEnv = Napi::External<MDBX_env>::New(env, this->env);
+	Napi::External<MDBX_env> externalEnv = Napi::External<MDBX_env>::New(env, this->env.get());
 
 	Napi::Value options = info.Env().Undefined();
 	if (info[0].IsObject()) {
@@ -301,7 +330,7 @@ Napi::Value MDBX_Env::GcInfo(const Napi::CallbackInfo &info) {
 		return env.Undefined();
 	}
 
-	rc = mdbx_env_info_ex(this->env, txn, &mei, sizeof(mei));
+	rc = mdbx_env_info_ex(this->env.get(), txn, &mei, sizeof(mei));
 	if (rc) {
 		mdbx_cursor_close(cursor);
 		Utils::throwMdbxError(info.Env(), rc);
@@ -333,10 +362,8 @@ Napi::Value MDBX_Env::GcInfo(const Napi::CallbackInfo &info) {
 Napi::Value MDBX_Env::Readers(const Napi::CallbackInfo &info) {
 	Napi::Env env = info.Env();
 
-	// Создаём массив для результатов
 	Napi::Array array = Napi::Array::New(env);
 
-	// Контекст для передачи данных в callback
 	struct CallbackContext {
 		Napi::Env env;
 		Napi::Array *array;
@@ -363,25 +390,29 @@ Napi::Value MDBX_Env::Readers(const Napi::CallbackInfo &info) {
 		return MDBX_RESULT_TRUE;
 	};
 
-	// Вызываем mdbx_reader_list с нашим callback
-	int rc = mdbx_reader_list(this->env, readerCallback, &ctx);
+	int rc = mdbx_reader_list(this->env.get(), readerCallback, &ctx);
 	if (rc != 0 && rc != MDBX_RESULT_TRUE) {
 		Utils::throwMdbxError(env, rc);
 		return env.Undefined();
 	}
 
-	return array; // Возвращаем массив
+	return array;
 }
 
 void MDBX_Env::Close(const Napi::CallbackInfo &info) {
-	int rc = mdbx_env_close_ex(this->env, false);
+	int rc = mdbx_env_close(this->env.get());
 	if (rc) {
 		Utils::throwMdbxError(info.Env(), rc);
+		return;
 	}
+
+	MDBX_Env::deleteSharedEnv(this->path);
 }
 
 MDBX_Env::~MDBX_Env() {
-	if (this->env) {
-		mdbx_env_close_ex(this->env, false);
+	// 1 + 1 = 2 [map ptr + this class instance ptr]
+	if (this->env.use_count() <= 2) {
+		mdbx_env_close(this->env.get());
+		MDBX_Env::deleteSharedEnv(this->path);
 	}
 }

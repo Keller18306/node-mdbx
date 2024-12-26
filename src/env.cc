@@ -55,6 +55,8 @@ void MDBX_Env::Init(Napi::Env env, Napi::Object exports) {
 			InstanceMethod("getTxn", &MDBX_Env::GetTxn),
 			InstanceMethod("gcInfo", &MDBX_Env::GcInfo),
 			InstanceMethod("readers", &MDBX_Env::Readers),
+			InstanceMethod("sync", &MDBX_Env::Sync),
+			InstanceMethod("copy", &MDBX_Env::Copy),
 			InstanceMethod("close", &MDBX_Env::Close),
 		});
 
@@ -160,6 +162,18 @@ MDBX_Env::MDBX_Env(const Napi::CallbackInfo &info) : Napi::ObjectWrap<MDBX_Env>(
 			Utils::throwMdbxError(info.Env(), rc);
 			return;
 		}
+
+		// rc = mdbx_env_open_for_recovery(env, path.c_str(), 1, true);
+		// if (rc) {
+		// 	Utils::throwMdbxError(info.Env(), rc);
+		// 	return;
+		// }
+
+		// rc = mdbx_env_turn_for_recovery(env, 1);
+		// if (rc) {
+		// 	Utils::throwMdbxError(info.Env(), rc);
+		// 	return;
+		// }
 	});
 }
 
@@ -397,6 +411,48 @@ Napi::Value MDBX_Env::Readers(const Napi::CallbackInfo &info) {
 	}
 
 	return array;
+}
+
+void MDBX_Env::Sync(const Napi::CallbackInfo &info) {
+	bool force = true;
+	bool nonblock = false;
+
+	if (info[0].IsObject()) {
+		Napi::Object options = info[0].ToObject();
+
+		if (options.Has("force")) {
+			force = options.Get("force").ToBoolean().Value();
+		}
+
+		if (options.Has("nonblock")) {
+			nonblock = options.Get("nonblock").ToBoolean().Value();
+		}
+	}
+
+	int rc = mdbx_env_sync_ex(this->env.get(), force, nonblock);
+	if (rc) {
+		Utils::throwMdbxError(info.Env(), rc);
+	}
+}
+
+void MDBX_Env::Copy(const Napi::CallbackInfo &info) {
+	std::string dest = info[0].ToString();
+
+	int flags = MDBX_CP_DEFAULTS;
+
+	if (info[1].IsObject()) {
+		Napi::Object options = info[1].ToObject();
+
+		Utils::setFromObject(&flags, MDBX_CP_COMPACT, options, "compact");
+		Utils::setFromObject(&flags, MDBX_CP_FORCE_DYNAMIC_SIZE, options, "forceDynamicSize");
+		Utils::setFromObject(&flags, MDBX_CP_DONT_FLUSH, options, "dontFlush");
+		Utils::setFromObject(&flags, MDBX_CP_THROTTLE_MVCC, options, "throttleMvcc");
+	}
+
+	int rc = mdbx_env_copy(this->env.get(), dest.c_str(), static_cast<MDBX_copy_flags>(flags));
+	if (rc) {
+		Utils::throwMdbxError(info.Env(), rc);
+	}
 }
 
 void MDBX_Env::Close(const Napi::CallbackInfo &info) {

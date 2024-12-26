@@ -21,6 +21,8 @@ class MDBX_Env : public Napi::ObjectWrap<MDBX_Env> {
 	Napi::Value GetTxn(const Napi::CallbackInfo &info);
 	Napi::Value GcInfo(const Napi::CallbackInfo &info);
 	Napi::Value Readers(const Napi::CallbackInfo &info);
+	void Sync(const Napi::CallbackInfo &info);
+	void Copy(const Napi::CallbackInfo &info);
 	void Close(const Napi::CallbackInfo &info);
 
   public:

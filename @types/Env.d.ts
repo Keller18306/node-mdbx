@@ -53,6 +53,18 @@ export interface ReaderInfo {
     bytes_retained: number;
 }
 
+export interface SyncOptions {
+    force?: boolean;
+    nonblock?: boolean;
+}
+
+export interface CopyOptions {
+    compact?: boolean;
+    forceDynamicSize?: boolean;
+    dontFlush?: boolean;
+    throttleMvcc?: boolean;
+}
+
 export declare class Env {
     constructor(options: EnvOptions);
 
@@ -62,5 +74,7 @@ export declare class Env {
     public getTxn(options?: TxnOptions): Txn;
     public gcInfo(txn: Txn): GcInfo;
     public readers(): ReaderInfo[];
+    public sync(options?: SyncOptions): void;
+    public copy(dest: string, options?: CopyOptions): void;
     public close(): void;
 }

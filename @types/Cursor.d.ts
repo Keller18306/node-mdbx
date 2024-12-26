@@ -68,22 +68,22 @@ export type ResolveCursorDataType<T extends CursorValueType | undefined, TDefaul
     T extends keyof DataTypeMap ? DataTypeMap[T] : TDefault;
 
 export declare interface Cursor<TKey extends CursorValue = Buffer, TValue extends CursorValue = Buffer> {
-    getKey(): TKey;
-    getValue(): TValue;
+    getKey(): TKey | null;
+    getValue(): TValue | null;
 
     count(): number;
     dupStat(): Stat;
 
-    first(): TKey;
-    firstDup(): TKey;
-    last(): TKey;
-    lastDup(): TKey;
-    next(): TKey;
-    nextDup(): TKey;
-    nextNoDup(): TKey;
-    prev(): TKey;
-    prevDup(): TKey;
-    prevNoDup(): TKey;
+    first(): TKey | null;
+    firstDup(): TKey | null;
+    last(): TKey | null;
+    lastDup(): TKey | null;
+    next(): TKey | null;
+    nextDup(): TKey | null;
+    nextNoDup(): TKey | null;
+    prev(): TKey | null;
+    prevDup(): TKey | null;
+    prevNoDup(): TKey | null;
 
     set(key: CursorValue, value?: CursorValue): TKey | null;
     range(key: CursorValue, value?: CursorValue): TKey | null;

@@ -28,7 +28,13 @@ export declare interface Dbi {
     ): Cursor<
         ResolveCursorDataType<TKey, Buffer>,
         ResolveCursorDataType<TValue, Buffer>
-    >;
+        >;
+    
+    minKeySize(): number;
+    maxKeySize(): number;
+
+    minValSize(): number;
+    maxValSize(): number;
 
     drop(options?: DbiDropOptions): void;
     rename(name: string, txn?: Txn): void;

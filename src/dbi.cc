@@ -10,6 +10,10 @@ void MDBX_Dbi::Init(Napi::Env env) {
 		{
 			InstanceMethod("stat", &MDBX_Dbi::Stat),
 			InstanceMethod("getCursor", &MDBX_Dbi::GetCursor),
+			InstanceMethod("minKeySize", &MDBX_Dbi::MinKeySize),
+			InstanceMethod("maxKeySize", &MDBX_Dbi::MaxKeySize),
+			InstanceMethod("minValSize", &MDBX_Dbi::MinValSize),
+			InstanceMethod("maxValSize", &MDBX_Dbi::MaxValSize),
 			InstanceMethod("rename", &MDBX_Dbi::Rename),
 			InstanceMethod("drop", &MDBX_Dbi::Drop),
 			InstanceMethod("close", &MDBX_Dbi::Close),
@@ -107,6 +111,12 @@ MDBX_Dbi::MDBX_Dbi(const Napi::CallbackInfo &info) : Napi::ObjectWrap<MDBX_Dbi>(
 			return;
 		}
 
+		rc = mdbx_dbi_flags(txn, this->dbi, &this->flags);
+		if (rc) {
+			Utils::throwMdbxError(env, rc);
+			return;
+		}
+
 		if (closeTxn) {
 			rc = mdbx_txn_commit(txn);
 			if (rc) {
@@ -188,6 +198,30 @@ Napi::Value MDBX_Dbi::GetCursor(const Napi::CallbackInfo &info) {
 	}
 
 	return instanceData->cursor->New({externalEnv, externalDbi, options});
+}
+
+Napi::Value MDBX_Dbi::MinKeySize(const Napi::CallbackInfo &info) {
+	int size = mdbx_limits_keysize_min(static_cast<MDBX_db_flags_t>(this->flags));
+
+	return Napi::Number::New(info.Env(), size);
+}
+
+Napi::Value MDBX_Dbi::MaxKeySize(const Napi::CallbackInfo &info) {
+	int size = mdbx_env_get_maxkeysize_ex(this->env, static_cast<MDBX_db_flags_t>(this->flags));
+
+	return Napi::Number::New(info.Env(), size);
+}
+
+Napi::Value MDBX_Dbi::MinValSize(const Napi::CallbackInfo &info) {
+	int size = mdbx_limits_valsize_min(static_cast<MDBX_db_flags_t>(this->flags));
+
+	return Napi::Number::New(info.Env(), size);
+}
+
+Napi::Value MDBX_Dbi::MaxValSize(const Napi::CallbackInfo &info) {
+	int size = mdbx_env_get_maxvalsize_ex(this->env, static_cast<MDBX_db_flags_t>(this->flags));
+
+	return Napi::Number::New(info.Env(), size);
 }
 
 void MDBX_Dbi::Rename(const Napi::CallbackInfo &info) {

@@ -401,7 +401,7 @@ Napi::Value MDBX_Env::Readers(const Napi::CallbackInfo &info) {
 
 		callbackContext->array->Set(callbackContext->index++, obj);
 
-		return MDBX_RESULT_TRUE;
+		return MDBX_SUCCESS;
 	};
 
 	int rc = mdbx_reader_list(this->env.get(), readerCallback, &ctx);

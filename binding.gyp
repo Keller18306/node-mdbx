@@ -21,7 +21,11 @@
         "libmdbx",
         "<!@(node -p \"require('node-addon-api').include\")"
       ],
-      "defines": [ 'NAPI_DISABLE_CPP_EXCEPTIONS' ],
+      "defines": [ 
+        'NAPI_DISABLE_CPP_EXCEPTIONS',
+        'NDEBUG', # disable assertions
+        'MDBX_ENABLE_PROFGC'
+      ],
       "conditions": [
         ["OS=='win'", {
           "libraries": [

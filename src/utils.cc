@@ -23,7 +23,7 @@ void Utils::throwMdbxError(Napi::Env env, int rc) {
 	err.ThrowAsJavaScriptException();
 }
 
-Napi::Object Utils::mdbxStatToJsObject(Napi::Env env, MDBX_stat stat) {
+Napi::Object Utils::mdbxStatToJsObject(Napi::Env env, const MDBX_stat stat) {
 	Napi::Object obj = Napi::Object::New(env);
 
 	obj.Set("psize", stat.ms_psize);
@@ -33,6 +33,61 @@ Napi::Object Utils::mdbxStatToJsObject(Napi::Env env, MDBX_stat stat) {
 	obj.Set("overflow_pages", stat.ms_overflow_pages);
 	obj.Set("entries", stat.ms_entries);
 	obj.Set("mod_txnid", stat.ms_mod_txnid);
+
+	return obj;
+}
+
+Napi::Value Utils::mdbxCommitLatencyToJSObject(const Napi::Env &env, const MDBX_commit_latency latency) {
+	Napi::Object obj = Napi::Object::New(env);
+
+	obj.Set("preparation", latency.preparation);
+	obj.Set("gc_wallclock", latency.gc_wallclock);
+	obj.Set("audit", latency.audit);
+	obj.Set("write", latency.write);
+	obj.Set("sync", latency.sync);
+	obj.Set("ending", latency.ending);
+	obj.Set("whole", latency.whole);
+	obj.Set("gc_cputime", latency.gc_cputime);
+
+	Napi::Object gcProf = Napi::Object::New(env);
+
+	gcProf.Set("wloops", latency.gc_prof.wloops);
+	gcProf.Set("coalescences", latency.gc_prof.coalescences);
+	gcProf.Set("wipes", latency.gc_prof.wipes);
+	gcProf.Set("flushes", latency.gc_prof.flushes);
+	gcProf.Set("kicks", latency.gc_prof.kicks);
+
+	Napi::Object work = Napi::Object::New(env);
+	work.Set("counter", latency.gc_prof.work_counter);
+	work.Set("rtime_monotonic", latency.gc_prof.work_rtime_monotonic);
+	work.Set("xtime_cpu", latency.gc_prof.work_xtime_cpu);
+	work.Set("rsteps", latency.gc_prof.work_rsteps);
+	work.Set("xpages", latency.gc_prof.work_xpages);
+	work.Set("majflt", latency.gc_prof.work_majflt);
+	gcProf.Set("work", work);
+
+	Napi::Object self = Napi::Object::New(env);
+	self.Set("counter", latency.gc_prof.self_counter);
+	self.Set("rtime_monotonic", latency.gc_prof.self_rtime_monotonic);
+	self.Set("xtime_cpu", latency.gc_prof.self_xtime_cpu);
+	self.Set("rsteps", latency.gc_prof.self_rsteps);
+	self.Set("xpages", latency.gc_prof.self_xpages);
+	self.Set("majflt", latency.gc_prof.self_majflt);
+	gcProf.Set("self", self);
+
+	Napi::Object pnlMergeWork = Napi::Object::New(env);
+	pnlMergeWork.Set("time", latency.gc_prof.pnl_merge_work.time);
+	pnlMergeWork.Set("volume", latency.gc_prof.pnl_merge_work.volume);
+	pnlMergeWork.Set("calls", latency.gc_prof.pnl_merge_work.calls);
+	gcProf.Set("pnl_merge_work", pnlMergeWork);
+
+	Napi::Object pnlMergeSelf = Napi::Object::New(env);
+	pnlMergeSelf.Set("time", latency.gc_prof.pnl_merge_self.time);
+	pnlMergeSelf.Set("volume", latency.gc_prof.pnl_merge_self.volume);
+	pnlMergeSelf.Set("calls", latency.gc_prof.pnl_merge_self.calls);
+	gcProf.Set("pnl_merge_self", pnlMergeSelf);
+
+	obj.Set("gc_prof", gcProf);
 
 	return obj;
 }

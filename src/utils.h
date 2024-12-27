@@ -21,7 +21,8 @@ class Utils {
 	static uint32_t toBigEndian(uint32_t value);
 	static uint64_t toBigEndian(uint64_t value);
 	static void throwMdbxError(Napi::Env env, int rc);
-	static Napi::Object mdbxStatToJsObject(Napi::Env env, MDBX_stat stat);
+	static Napi::Object mdbxStatToJsObject(Napi::Env env, const MDBX_stat stat);
+	static Napi::Value mdbxCommitLatencyToJSObject(const Napi::Env &env, const MDBX_commit_latency latency);
 	static Napi::Value Error(Napi::Env env, const char *message);
 	static MDBX_val vectorBufferToMdbxValue(const buffer_t &buffer);
 	static Napi::Value vectorBufferToArg(Napi::Env env, ValueType type, bool intToBE, const buffer_t &buffer);

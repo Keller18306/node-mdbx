@@ -7,6 +7,7 @@ void MDBX_Txn::Init(Napi::Env env) {
 		{
 			InstanceMethod("info", &MDBX_Txn::Info),
 			InstanceMethod("commit", &MDBX_Txn::Commit),
+			InstanceMethod("commitWithLatency", &MDBX_Txn::CommitWithLatency),
 			InstanceMethod("abort", &MDBX_Txn::Abort),
 			InstanceMethod("park", &MDBX_Txn::Park),
 			InstanceMethod("unpark", &MDBX_Txn::Unpark),
@@ -99,6 +100,18 @@ void MDBX_Txn::Commit(const Napi::CallbackInfo &info) {
 	if (rc) {
 		Utils::throwMdbxError(info.Env(), rc);
 	}
+}
+
+Napi::Value MDBX_Txn::CommitWithLatency(const Napi::CallbackInfo &info) {
+	MDBX_commit_latency latency;
+
+	int rc = mdbx_txn_commit_ex(this->txn, &latency);
+	if (rc) {
+		Utils::throwMdbxError(info.Env(), rc);
+		return info.Env().Undefined();
+	}
+
+	return Utils::mdbxCommitLatencyToJSObject(info.Env(), latency);
 }
 
 void MDBX_Txn::Abort(const Napi::CallbackInfo &info) {

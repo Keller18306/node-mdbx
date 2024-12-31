@@ -40,7 +40,7 @@ void MDBX_Debug::Setup(const Napi::CallbackInfo &info) {
 		log_level = MDBX_LOG_EXTRA;
     }
 
-	mdbx_setup_debug(log_level, static_cast<MDBX_debug_flags>(flags), &Logger);
+	mdbx_setup_debug(log_level, static_cast<MDBX_debug_flags>(flags), logger);
 }
 
 void MDBX_Debug::Logger(MDBX_log_level_t loglevel, const char *function, int line, const char *fmt, va_list args) noexcept {

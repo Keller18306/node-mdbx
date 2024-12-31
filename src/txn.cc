@@ -99,7 +99,10 @@ void MDBX_Txn::Commit(const Napi::CallbackInfo &info) {
 	int rc = mdbx_txn_commit(this->txn);
 	if (rc) {
 		Utils::throwMdbxError(info.Env(), rc);
+		return;
 	}
+
+	this->txn = nullptr;
 }
 
 Napi::Value MDBX_Txn::CommitWithLatency(const Napi::CallbackInfo &info) {
@@ -110,6 +113,8 @@ Napi::Value MDBX_Txn::CommitWithLatency(const Napi::CallbackInfo &info) {
 		Utils::throwMdbxError(info.Env(), rc);
 		return info.Env().Undefined();
 	}
+
+	this->txn = nullptr;
 
 	return Utils::mdbxCommitLatencyToJSObject(info.Env(), latency);
 }

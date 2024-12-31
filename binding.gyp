@@ -24,7 +24,8 @@
       "defines": [ 
         'NAPI_DISABLE_CPP_EXCEPTIONS',
         'NDEBUG', # disable assertions
-        'MDBX_ENABLE_PROFGC'
+        'MDBX_ENABLE_PROFGC',
+        # 'MDBX_DEBUG=1'
       ],
       "conditions": [
         ["OS=='win'", {

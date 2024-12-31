@@ -113,9 +113,20 @@
                 // "env": {
                 //     "NODE_OPTIONS": "-r ts-node/register --inspect"
                 // }
+            },
+            {
+                "type": "vgdb",
+                "request": "attach",
+                "name": "Debug (vdbg)",
+                "debug": "verbose"
+                // "program": "node"
+                // "program": "node"
             }
         ],
         "compounds": []
     },
-    "editor.formatOnSaveMode": "file"
+    "editor.formatOnSaveMode": "file",
+    // "editor.formatOnPaste": false,
+    // "editor.formatOnSave": false,
+    // "editor.formatOnType": false
 }

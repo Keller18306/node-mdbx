@@ -317,8 +317,17 @@ void MDBX_Cursor::Put(const Napi::CallbackInfo &info) {
 	MDBX_val key, data;
 	unsigned int flags = MDBX_put_flags::MDBX_UPSERT;
 
-	key = Utils::argToMdbxValue(env, info[0], this->_keyBuffer);
-	data = Utils::argToMdbxValue(env, info[1], this->_dataBuffer);
+	// key = Utils::argToMdbxValue(env, info[0], this->_keyBuffer);
+	// data = Utils::argToMdbxValue(env, info[1], this->_dataBuffer);
+
+	Napi::Buffer<char> buffer1 = info[0].As<Napi::Buffer<char>>();
+
+	key.iov_len = buffer1.Length();
+	key.iov_base = (void *)buffer1.Data();
+
+	Napi::Buffer<char> buffer2 = info[1].As<Napi::Buffer<char>>();
+	data.iov_len = buffer2.Length();
+	data.iov_base = (void *)buffer2.Data();
 
 	if (info[2].IsObject()) {
 		Napi::Object options = info[2].ToObject();

@@ -116,7 +116,7 @@ void Utils::mdbxValueToVectorBuffer(buffer_t &buffer, MDBX_val value) {
 	std::copy(data, data + size, std::back_inserter(buffer));
 }
 
-MDBX_val Utils::argToMdbxValue(Napi::Env env, Napi::Value arg, buffer_t &_buffer) {
+MDBX_val Utils::argToMdbxValue(Napi::Value arg, buffer_t &_buffer) {
 	if (arg.IsBuffer()) {
 		Napi::Buffer<char> buffer = arg.As<Napi::Buffer<char>>();
 
@@ -159,13 +159,13 @@ MDBX_val Utils::argToMdbxValue(Napi::Env env, Napi::Value arg, buffer_t &_buffer
 		bool lossless;
 		uint64_t data = bigint.Uint64Value(&lossless);
 		if (lossless) {
-			throw Napi::RangeError::New(env, "BigInt is too large for int64");
+			throw Napi::RangeError::New(arg.Env(), "BigInt is too large for int64");
 		}
 
 		char *dataPtr = reinterpret_cast<char *>(&data);
 		std::copy(dataPtr, dataPtr + sizeof(data), std::back_inserter(_buffer));
 	} else {
-		throw Napi::TypeError::New(env, "Unknown data type");
+		throw Napi::TypeError::New(arg.Env(), "Unknown data type");
 	}
 
 	return vectorBufferToMdbxValue(_buffer);
@@ -212,6 +212,8 @@ Napi::Value Utils::vectorBufferToArg(Napi::Env env, ValueType type, bool intToBE
 		return Napi::BigInt::New(env, value);
 	}
 	}
+
+	throw std::runtime_error("Unsupported data type");
 }
 
 void Utils::setFromObject(unsigned int *flagsSetter, int flag, Napi::Object flagsObj, const char *objValue) {

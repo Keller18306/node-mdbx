@@ -27,7 +27,7 @@ class Utils {
 	static MDBX_val vectorBufferToMdbxValue(const buffer_t &buffer);
 	static Napi::Value vectorBufferToArg(Napi::Env env, ValueType type, bool intToBE, const buffer_t &buffer);
 	static void mdbxValueToVectorBuffer(buffer_t &buffer, MDBX_val value);
-	static MDBX_val argToMdbxValue(Napi::Env env, Napi::Value arg, buffer_t &_buffer);
+	static MDBX_val argToMdbxValue(Napi::Value arg, buffer_t &_buffer);
 	static void setFromObject(unsigned int *flagsSetter, int flag, Napi::Object flagsObj, const char *objValue);
 	static void setFromObject(int *flagsSetter, int flag, Napi::Object flagsObj, const char *objValue);
 	static void setFromObject(intptr_t *longSetter, Napi::Object flagsObj, const char *objValue, long defaultValue);

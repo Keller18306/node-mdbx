@@ -97,7 +97,7 @@ MDBX_Dbi::MDBX_Dbi(const Napi::CallbackInfo &info) : Napi::ObjectWrap<MDBX_Dbi>(
 			MDBX_val value;
 
 			try {
-				value = Utils::argToMdbxValue(env, nameValue, buffer);
+				value = Utils::argToMdbxValue(nameValue, buffer);
 			} catch (const Napi::Error &e) {
 				e.ThrowAsJavaScriptException();
 				return;

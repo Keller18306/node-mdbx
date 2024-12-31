@@ -249,7 +249,7 @@ Napi::Value MDBX_Cursor::_commonSet(const Napi::CallbackInfo &info, MDBX_cursor_
 	MDBX_cursor_op op;
 
 	try {
-		key = Utils::argToMdbxValue(env, info[0], this->_keyBuffer);
+		key = Utils::argToMdbxValue(info[0], this->_keyBuffer);
 
 		if (!info[1].IsUndefined()) {
 			if (!(this->dbiFlags & MDBX_DUPSORT)) {
@@ -257,7 +257,7 @@ Napi::Value MDBX_Cursor::_commonSet(const Napi::CallbackInfo &info, MDBX_cursor_
 			}
 
 			op = opKeyValue;
-			data = Utils::argToMdbxValue(env, info[1], this->_dataBuffer);
+			data = Utils::argToMdbxValue(info[1], this->_dataBuffer);
 		} else {
 			op = opKeyOnly;
 		}

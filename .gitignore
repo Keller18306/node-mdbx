@@ -18,3 +18,5 @@
 /libmdbx/*.tag
 /libmdbx/*.a
 /libmdbx/*.so
+
+*.log

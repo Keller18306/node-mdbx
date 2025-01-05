@@ -24,7 +24,7 @@ export declare interface Dbi {
     stat(txn?: Txn): Stat;
 
     getCursor<TKey extends CursorValueType | undefined = undefined, TValue extends CursorValueType | undefined = undefined>(
-        options: CursorOptions & { keyType?: TKey; dataType?: TValue }
+        options?: CursorOptions & { keyType?: TKey; dataType?: TValue }
     ): Cursor<
         ResolveCursorDataType<TKey, Buffer>,
         ResolveCursorDataType<TValue, Buffer>

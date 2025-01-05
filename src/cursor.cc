@@ -67,8 +67,8 @@ void MDBX_Cursor::Init(Napi::Env env) {
 MDBX_Cursor::MDBX_Cursor(const Napi::CallbackInfo &info) : Napi::ObjectWrap<MDBX_Cursor>(info) {
 	Napi::Env env = info.Env();
 
-	if (info.Length() < 3 || !info[0].IsExternal() || !info[1].IsExternal() || !info[2].IsObject()) {
-		Napi::TypeError::New(info.Env(), "Expected MDBX_env pointer, dbi, and an options object").ThrowAsJavaScriptException();
+	if (info.Length() < 2 || !info[0].IsExternal() || !info[1].IsExternal()) {
+		Napi::TypeError::New(info.Env(), "Expected MDBX_env pointer or dbi").ThrowAsJavaScriptException();
 		return;
 	}
 

@@ -76,7 +76,7 @@ function testCursorWrite1(ic) {
 }
 
 function testCursorWrite2(ic) {
-    const cursor = dbi.getCursor({});
+    const cursor = dbi.getCursor();
 
     logMemoryUsage("Before test - write2");
 
@@ -110,7 +110,7 @@ function testCursorWrite2(ic) {
 }
 
 function testCursorRead(ic) {
-    const cursor = dbi.getCursor({});
+    const cursor = dbi.getCursor();
 
     logMemoryUsage("Before test - read");
 

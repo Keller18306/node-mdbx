@@ -7,7 +7,7 @@
   "license": "MIT",
   "private": true,
   "scripts": {
-    "install": "node-gyp-build",
+    "install": "npm run clean && node-gyp-build",
     "configure": "node-gyp configure",
     "build:dev": "node-gyp -j 4 build --debug",
     "build": "node-gyp -j 4 build",
@@ -15,6 +15,22 @@
     "rebuild": "node-gyp -j 4 rebuild",
     "clean": "node-gyp clean"
   },
+  "bin": {
+    "mdbx_chk": "./build/Release/mdbx_chk",
+    "mdbx_copy": "./build/Release/mdbx_copy",
+    "mdbx_drop": "./build/Release/mdbx_drop",
+    "mdbx_dump": "./build/Release/mdbx_dump",
+    "mdbx_load": "./build/Release/mdbx_load",
+    "mdbx_stat": "./build/Release/mdbx_stat"
+  },
+  "man": [
+    "./libmdbx/man1/mdbx_chk.1",
+    "./libmdbx/man1/mdbx_copy.1",
+    "./libmdbx/man1/mdbx_drop.1",
+    "./libmdbx/man1/mdbx_dump.1",
+    "./libmdbx/man1/mdbx_load.1",
+    "./libmdbx/man1/mdbx_stat.1"
+  ],
   "dependencies": {
     "node-gyp-build": "^4.8.4"
   },

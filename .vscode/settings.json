@@ -119,11 +119,19 @@
                 "request": "attach",
                 "name": "Debug (vdbg)",
                 "debug": "verbose"
-                // "program": "node"
-                // "program": "node"
             }
         ],
         "compounds": []
+    },
+    "terminal.integrated.profiles.linux": {
+        "bash": {
+            "path": "bash",
+            "icon": "terminal-bash",
+            "args": [
+                "--rcfile",
+                "${workspaceFolder}/alias.sh"
+            ]
+        },
     },
     "editor.formatOnSaveMode": "file",
     // "editor.formatOnPaste": false,

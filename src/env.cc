@@ -67,7 +67,7 @@ MDBX_Env::MDBX_Env(const Napi::CallbackInfo &info) : Napi::ObjectWrap<MDBX_Env>(
 	Napi::Object options = info[0].ToObject();
 
 	if (options.Get("path").IsString()) {
-		this->path = std::filesystem::canonical(options.Get("path").ToString().Utf8Value()).string();
+		this->path = std::filesystem::absolute(options.Get("path").ToString().Utf8Value()).string();
 	} else {
 		Napi::Error::New(info.Env(), "Env path is not defined").ThrowAsJavaScriptException();
 		return;

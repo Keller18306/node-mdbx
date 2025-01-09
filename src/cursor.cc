@@ -251,8 +251,12 @@ Napi::Value MDBX_Cursor::_commonSet(const Napi::CallbackInfo &info, MDBX_cursor_
 	try {
 		key = Utils::argToMdbxValue(info[0], this->_keyBuffer);
 
-		if (!info[1].IsUndefined()) {
-			if (!(this->dbiFlags & MDBX_DUPSORT)) {
+		const bool hasDataArg = !info[1].IsUndefined();
+		const bool isEmptyBuffer = info[1].IsBuffer() && info[1].As<Napi::Buffer<char>>().Length() == 0;
+
+		if (hasDataArg && !isEmptyBuffer) {
+			const bool isDupSort = this->dbiFlags & MDBX_DUPSORT;
+			if (!isDupSort) {
 				return Utils::Error(env, "Dbi is not MDB_DUPSORT");
 			}
 
@@ -394,21 +398,25 @@ void MDBX_Cursor::Bind(const Napi::CallbackInfo &info) {
 	rc = mdbx_cursor_bind(this->txn, this->cursor, *this->dbi);
 	if (rc) {
 		Utils::throwMdbxError(env, rc);
-	}
-
-	MDBX_val key = Utils::vectorBufferToMdbxValue(this->_keyBuffer);
-	MDBX_val data = Utils::vectorBufferToMdbxValue(this->_dataBuffer);
-
-	if (this->dbiFlags & MDBX_DUPSORT) {
-		op = MDBX_GET_BOTH;
-	} else {
-		op = MDBX_SET;
-	}
-
-	rc = mdbx_cursor_get(this->cursor, &key, &data, op);
-	if (rc) {
-		Utils::throwMdbxError(env, rc);
 		return;
+	}
+
+	bool restorePosition = info[1].IsUndefined() ? false : info[1].ToBoolean().Value();
+	if (restorePosition) {
+		MDBX_val key = Utils::vectorBufferToMdbxValue(this->_keyBuffer);
+		MDBX_val data = Utils::vectorBufferToMdbxValue(this->_dataBuffer);
+
+		if (this->dbiFlags & MDBX_DUPSORT) {
+			op = MDBX_GET_BOTH;
+		} else {
+			op = MDBX_SET;
+		}
+
+		rc = mdbx_cursor_get(this->cursor, &key, &data, op);
+		if (rc) {
+			Utils::throwMdbxError(env, rc);
+			return;
+		}
 	}
 }
 

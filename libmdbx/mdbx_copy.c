@@ -19,7 +19,7 @@
 /// \author Леонид Юрьев aka Leonid Yuriev <leo@yuriev.ru> \date 2015-2024
 
 
-#define MDBX_BUILD_SOURCERY eee26a2b35ffba0c4c2594f7e5516ee40199f529b0b90fd8c98b3c3b90e9d8ce_v0_13_2_39_g1e4e2eb3
+#define MDBX_BUILD_SOURCERY 1ece8dcd92f42147a33b5ca0a31ac2783073bfed627e7c7f90183a5b8a7707f8_v0_13_3_92_gbd45668f
 
 
 #define LIBMDBX_INTERNALS
@@ -3362,6 +3362,21 @@ static void usage(const char *prog) {
   exit(EXIT_FAILURE);
 }
 
+static void logger(MDBX_log_level_t level, const char *function, int line, const char *fmt, va_list args) {
+  static const char *const prefixes[] = {
+      "!!!fatal: ", // 0 fatal
+      " ! ",        // 1 error
+      " ~ ",        // 2 warning
+      "   ",        // 3 notice
+      "   //",      // 4 verbose
+  };
+  if (level < MDBX_LOG_DEBUG) {
+    if (function && line)
+      fprintf(stderr, "%s", prefixes[level]);
+    vfprintf(stderr, fmt, args);
+  }
+}
+
 int main(int argc, char *argv[]) {
   int rc;
   MDBX_env *env = nullptr;
@@ -3426,6 +3441,7 @@ int main(int argc, char *argv[]) {
             mdbx_version.git.describe, mdbx_version.git.datetime, mdbx_version.git.tree, argv[1],
             (argc == 2) ? "stdout" : argv[2]);
     fflush(nullptr);
+    mdbx_setup_debug(MDBX_LOG_NOTICE, MDBX_DBG_DONTCHANGE, logger);
   }
 
   act = "opening environment";

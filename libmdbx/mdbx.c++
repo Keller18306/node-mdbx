@@ -3,7 +3,7 @@
 /* clang-format off */
 
 
-#define MDBX_BUILD_SOURCERY eee26a2b35ffba0c4c2594f7e5516ee40199f529b0b90fd8c98b3c3b90e9d8ce_v0_13_2_39_g1e4e2eb3
+#define MDBX_BUILD_SOURCERY 1ece8dcd92f42147a33b5ca0a31ac2783073bfed627e7c7f90183a5b8a7707f8_v0_13_3_92_gbd45668f
 
 
 #define LIBMDBX_INTERNALS

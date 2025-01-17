@@ -145,7 +145,7 @@ MDBX_val Utils::argToMdbxValue(Napi::Value arg, buffer_t &_buffer) {
 		// value.iov_base = buffer.Data();
 	} else if (arg.IsNumber()) {
 		// TODO CHECK FOR BE/LE
-		Napi::Number number = arg.ToNumber();
+		Napi::Number number = arg.As<Napi::Number>();
 		uint32_t data = toBigEndian(number.Uint32Value());
 
 		_buffer.clear();
@@ -158,7 +158,7 @@ MDBX_val Utils::argToMdbxValue(Napi::Value arg, buffer_t &_buffer) {
 
 		bool lossless;
 		uint64_t data = bigint.Uint64Value(&lossless);
-		if (lossless) {
+		if (!lossless) {
 			throw Napi::RangeError::New(arg.Env(), "BigInt is too large for int64");
 		}
 
@@ -236,7 +236,7 @@ void Utils::setFromObject(intptr_t *longSetter, Napi::Object flagsObj, const cha
 	Napi::Value value = flagsObj.Get(objValue);
 
 	if (value.IsNumber()) {
-		*longSetter = value.ToNumber().Int64Value();
+		*longSetter = value.As<Napi::Number>().Int64Value();
 	} else {
 		*longSetter = defaultValue;
 	}

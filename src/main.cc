@@ -6,6 +6,7 @@
 #include "debug.h"
 #include "env.h"
 #include "errors.h"
+#include "options.h"
 #include "txn.h"
 #include "version.h"
 
@@ -16,6 +17,7 @@ Napi::Object Init(Napi::Env env, Napi::Object exports) {
 	MDBX_Cursor::Init(env);
 	MDBX_Version::Init(env, exports);
 	MDBX_Errors::Init(env, exports);
+	MDBX_Options::Init(env, exports);
 	MDBX_Debug::Init(env, exports);
 
 	return exports;

@@ -26,6 +26,7 @@
         "src/cursor.cc",
         "src/version.cc",
         "src/errors.cc",
+        "src/options.cc",
         "src/debug.cc",
         "src/utils.cc"
       ],

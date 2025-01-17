@@ -106,7 +106,7 @@
                 "name": "Debug",
                 "program": "node",
                 "args": [
-                    "--expose-gc",
+                    // "--expose-gc",
                     "test.js"
                 ],
                 "cwd": "${workspaceFolder}",

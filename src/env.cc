@@ -55,6 +55,8 @@ void MDBX_Env::Init(Napi::Env env, Napi::Object exports) {
 			InstanceMethod("getTxn", &MDBX_Env::GetTxn),
 			InstanceMethod("gcInfo", &MDBX_Env::GcInfo),
 			InstanceMethod("readers", &MDBX_Env::Readers),
+			InstanceMethod("getOption", &MDBX_Env::GetOption),
+			InstanceMethod("setOption", &MDBX_Env::SetOption),
 			InstanceMethod("sync", &MDBX_Env::Sync),
 			InstanceMethod("copy", &MDBX_Env::Copy),
 			InstanceMethod("close", &MDBX_Env::Close),
@@ -81,7 +83,7 @@ MDBX_Env::MDBX_Env(const Napi::CallbackInfo &info) : Napi::ObjectWrap<MDBX_Env>(
 		Napi::Object options = info[0].ToObject();
 
 		if (options.Get("maxDbs").IsNumber()) {
-			MDBX_dbi maxDbs = options.Get("maxDbs").ToNumber().Uint32Value();
+			MDBX_dbi maxDbs = options.Get("maxDbs").As<Napi::Number>().Uint32Value();
 
 			rc = mdbx_env_set_maxdbs(env, maxDbs);
 			if (rc) {
@@ -91,7 +93,7 @@ MDBX_Env::MDBX_Env(const Napi::CallbackInfo &info) : Napi::ObjectWrap<MDBX_Env>(
 		}
 
 		if (options.Get("maxReaders").IsNumber()) {
-			unsigned int maxReaders = options.Get("maxReaders").ToNumber().Uint32Value();
+			unsigned int maxReaders = options.Get("maxReaders").As<Napi::Number>().Uint32Value();
 
 			rc = mdbx_env_set_maxreaders(env, maxReaders);
 			if (rc) {
@@ -120,7 +122,7 @@ MDBX_Env::MDBX_Env(const Napi::CallbackInfo &info) : Napi::ObjectWrap<MDBX_Env>(
 		}
 
 		if (options.Get("mode").IsNumber()) {
-			Napi::Number numMode = options.Get("mode").ToNumber();
+			Napi::Number numMode = options.Get("mode").As<Napi::Number>();
 
 			mode = numMode.Uint32Value();
 		}
@@ -411,6 +413,42 @@ Napi::Value MDBX_Env::Readers(const Napi::CallbackInfo &info) {
 	}
 
 	return array;
+}
+
+Napi::Value MDBX_Env::GetOption(const Napi::CallbackInfo &info) {
+	unsigned int option = info[0].As<Napi::Number>().Uint32Value();
+	uint64_t value;
+
+	int rc = mdbx_env_get_option(this->env.get(), static_cast<MDBX_option_t>(option), &value);
+	if (rc) {
+		Utils::throwMdbxError(info.Env(), rc);
+		return info.Env().Undefined();
+	}
+
+	return Napi::BigInt::New(info.Env(), value);
+}
+
+void MDBX_Env::SetOption(const Napi::CallbackInfo &info) {
+	unsigned int option = info[0].As<Napi::Number>().Uint32Value();
+	uint64_t value;
+
+	if (info[1].IsBigInt()) {
+		bool lossless;
+
+		value = info[1].As<Napi::BigInt>().Uint64Value(&lossless);
+
+		if (!lossless) {
+			Napi::RangeError::New(info.Env(), "BigInt is too large for int64").ThrowAsJavaScriptException();
+			return;
+		}
+	} else {
+		value = info[1].As<Napi::Number>().Int64Value();
+	}
+
+	int rc = mdbx_env_set_option(this->env.get(), static_cast<MDBX_option_t>(option), value);
+	if (rc) {
+		Utils::throwMdbxError(info.Env(), rc);
+	}
 }
 
 void MDBX_Env::Sync(const Napi::CallbackInfo &info) {

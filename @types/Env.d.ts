@@ -1,6 +1,7 @@
 import { CursorValue } from './Cursor';
-import { Dbi, DbiOptions } from './Dbi'
+import { Dbi, DbiOptions } from './Dbi';
 import { Info } from './Info';
+import { Options } from './Options';
 import { Stat } from './Stat';
 import { Txn, TxnOptions } from './Txn';
 
@@ -74,6 +75,8 @@ export declare class Env {
     public getTxn(options?: TxnOptions): Txn;
     public gcInfo(txn: Txn): GcInfo;
     public readers(): ReaderInfo[];
+    public getOption(option: Options): bigint;
+    public setOption(option: Options, value: number | bigint): void;
     public sync(options?: SyncOptions): void;
     public copy(dest: string, options?: CopyOptions): void;
     public close(): void;

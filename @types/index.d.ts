@@ -6,8 +6,9 @@ export * from './Debug';
 export * from './Env';
 export * from './Errors';
 export * from './Info';
+export * from './Options';
 export * from './Stat';
 export * from './Txn';
 export * from './Version';
 
-export as namespace MDBX;
+export as namespace mdbx;

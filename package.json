@@ -32,11 +32,11 @@
     "./libmdbx/man1/mdbx_stat.1"
   ],
   "dependencies": {
-    "node-gyp-build": "^4.8.4"
+    "node-gyp-build": "^4.8.4",
+    "node-addon-api": "^8.3.0"
   },
   "devDependencies": {
     "@types/node": "^22.10.1",
-    "node-addon-api": "^8.3.0",
     "node-gyp": "^10.2.0"
   }
 }

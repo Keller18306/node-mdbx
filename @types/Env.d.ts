@@ -77,7 +77,11 @@ export declare class Env {
     public readers(): ReaderInfo[];
     public getOption(option: Options): bigint;
     public setOption(option: Options, value: number | bigint): void;
-    public sync(options?: SyncOptions): void;
+    /**
+     * 
+     * @returns boolean: true if data synced, false if not data to sync
+     */
+    public sync(options?: SyncOptions): boolean;
     public copy(dest: string, options?: CopyOptions): void;
     public close(): void;
 }

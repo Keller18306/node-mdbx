@@ -451,7 +451,7 @@ void MDBX_Env::SetOption(const Napi::CallbackInfo &info) {
 	}
 }
 
-void MDBX_Env::Sync(const Napi::CallbackInfo &info) {
+Napi::Value MDBX_Env::Sync(const Napi::CallbackInfo &info) {
 	bool force = true;
 	bool nonblock = false;
 
@@ -468,9 +468,11 @@ void MDBX_Env::Sync(const Napi::CallbackInfo &info) {
 	}
 
 	int rc = mdbx_env_sync_ex(this->env.get(), force, nonblock);
-	if (rc) {
+	if (rc != MDBX_SUCCESS && rc != MDBX_RESULT_TRUE) {
 		Utils::throwMdbxError(info.Env(), rc);
 	}
+
+	return Napi::Boolean::New(info.Env(), rc == MDBX_SUCCESS);
 }
 
 void MDBX_Env::Copy(const Napi::CallbackInfo &info) {

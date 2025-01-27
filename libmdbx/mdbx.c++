@@ -1,9 +1,9 @@
 /// \copyright SPDX-License-Identifier: Apache-2.0
-/// \author Леонид Юрьев aka Leonid Yuriev <leo@yuriev.ru> \date 2015-2024
+/// \author Леонид Юрьев aka Leonid Yuriev <leo@yuriev.ru> \date 2015-2025
 /* clang-format off */
 
 
-#define MDBX_BUILD_SOURCERY 1ece8dcd92f42147a33b5ca0a31ac2783073bfed627e7c7f90183a5b8a7707f8_v0_13_3_92_gbd45668f
+#define MDBX_BUILD_SOURCERY 1f4badaf48b3d1fcd26f5028e89e917427365a00f26d171d1a056225dcd2f2f1_v0_13_3_105_gb46d2def
 
 
 #define LIBMDBX_INTERNALS
@@ -3224,7 +3224,7 @@ MDBX_NOTHROW_CONST_FUNCTION MDBX_MAYBE_UNUSED static inline pgno_t pgno_sub(size
   return int64pgno((int64_t)base - (int64_t)subtrahend);
 }
 /// \copyright SPDX-License-Identifier: Apache-2.0
-/// \author Леонид Юрьев aka Leonid Yuriev <leo@yuriev.ru> \date 2020-2024
+/// \author Леонид Юрьев aka Leonid Yuriev <leo@yuriev.ru> \date 2020-2025
 ///
 /// \brief Non-inline part of the libmdbx C++ API
 ///

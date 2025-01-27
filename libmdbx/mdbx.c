@@ -1,10 +1,10 @@
 /// \copyright SPDX-License-Identifier: Apache-2.0
-/// \author Леонид Юрьев aka Leonid Yuriev <leo@yuriev.ru> \date 2015-2024
+/// \author Леонид Юрьев aka Leonid Yuriev <leo@yuriev.ru> \date 2015-2025
 /* clang-format off */
 
 #define xMDBX_ALLOY 1  /* alloyed build */
 
-#define MDBX_BUILD_SOURCERY 1ece8dcd92f42147a33b5ca0a31ac2783073bfed627e7c7f90183a5b8a7707f8_v0_13_3_92_gbd45668f
+#define MDBX_BUILD_SOURCERY 1f4badaf48b3d1fcd26f5028e89e917427365a00f26d171d1a056225dcd2f2f1_v0_13_3_105_gb46d2def
 
 
 #define LIBMDBX_INTERNALS
@@ -6806,7 +6806,7 @@ MDBX_INTERNAL int walk_pages(MDBX_txn *txn, walk_func *visitor, void *user, walk
     return it;                                                                 \
   }
 /// \copyright SPDX-License-Identifier: Apache-2.0
-/// \author Леонид Юрьев aka Leonid Yuriev <leo@yuriev.ru> \date 2015-2024
+/// \author Леонид Юрьев aka Leonid Yuriev <leo@yuriev.ru> \date 2015-2025
 
 
 __cold size_t mdbx_default_pagesize(void) {
@@ -7350,7 +7350,7 @@ LIBMDBX_API __cold intptr_t mdbx_limits_pgsize_max(void) { return __inline_mdbx_
 /// \copyright SPDX-License-Identifier: Apache-2.0
 /// \note Please refer to the COPYRIGHT file for explanations license change,
 /// credits and acknowledgments.
-/// \author Леонид Юрьев aka Leonid Yuriev <leo@yuriev.ru> \date 2015-2024
+/// \author Леонид Юрьев aka Leonid Yuriev <leo@yuriev.ru> \date 2015-2025
 
 
 typedef struct compacting_context {
@@ -8211,7 +8211,7 @@ __cold int mdbx_env_copyW(MDBX_env *env, const wchar_t *dest_path, MDBX_copy_fla
   return LOG_IFERR(rc);
 }
 /// \copyright SPDX-License-Identifier: Apache-2.0
-/// \author Леонид Юрьев aka Leonid Yuriev <leo@yuriev.ru> \date 2015-2024
+/// \author Леонид Юрьев aka Leonid Yuriev <leo@yuriev.ru> \date 2015-2025
 
 
 MDBX_cursor *mdbx_cursor_create(void *context) {
@@ -8990,7 +8990,7 @@ __cold int mdbx_cursor_ignord(MDBX_cursor *mc) {
   return MDBX_SUCCESS;
 }
 /// \copyright SPDX-License-Identifier: Apache-2.0
-/// \author Леонид Юрьев aka Leonid Yuriev <leo@yuriev.ru> \date 2015-2024
+/// \author Леонид Юрьев aka Leonid Yuriev <leo@yuriev.ru> \date 2015-2025
 
 
 int mdbx_dbi_open2(MDBX_txn *txn, const MDBX_val *name, MDBX_db_flags_t flags, MDBX_dbi *dbi) {
@@ -9304,7 +9304,7 @@ bailout:
   return LOG_IFERR(rc);
 }
 /// \copyright SPDX-License-Identifier: Apache-2.0
-/// \author Леонид Юрьев aka Leonid Yuriev <leo@yuriev.ru> \date 2015-2024
+/// \author Леонид Юрьев aka Leonid Yuriev <leo@yuriev.ru> \date 2015-2025
 
 
 __cold static intptr_t reasonable_db_maxsize(void) {
@@ -10734,7 +10734,7 @@ __cold int mdbx_env_stat_ex(const MDBX_env *env, const MDBX_txn *txn, MDBX_stat 
   return LOG_IFERR(rc);
 }
 /// \copyright SPDX-License-Identifier: Apache-2.0
-/// \author Леонид Юрьев aka Leonid Yuriev <leo@yuriev.ru> \date 2015-2024
+/// \author Леонид Юрьев aka Leonid Yuriev <leo@yuriev.ru> \date 2015-2025
 
 
 /*------------------------------------------------------------------------------
@@ -10897,7 +10897,7 @@ int mdbx_txn_unlock(MDBX_env *env) {
   return MDBX_SUCCESS;
 }
 /// \copyright SPDX-License-Identifier: Apache-2.0
-/// \author Леонид Юрьев aka Leonid Yuriev <leo@yuriev.ru> \date 2015-2024
+/// \author Леонид Юрьев aka Leonid Yuriev <leo@yuriev.ru> \date 2015-2025
 
 
 static inline double key2double(const int64_t key) {
@@ -11093,7 +11093,7 @@ int64_t mdbx_int64_from_key(const MDBX_val v) {
   return (int64_t)(unaligned_peek_u64(2, v.iov_base) - UINT64_C(0x8000000000000000));
 }
 /// \copyright SPDX-License-Identifier: Apache-2.0
-/// \author Леонид Юрьев aka Leonid Yuriev <leo@yuriev.ru> \date 2015-2024
+/// \author Леонид Юрьев aka Leonid Yuriev <leo@yuriev.ru> \date 2015-2025
 
 
 __cold int mdbx_is_readahead_reasonable(size_t volume, intptr_t redundancy) {
@@ -11380,7 +11380,7 @@ const char *mdbx_strerror_ANSI2OEM(int errnum) {
 }
 #endif /* Bit of madness for Windows */
 /// \copyright SPDX-License-Identifier: Apache-2.0
-/// \author Леонид Юрьев aka Leonid Yuriev <leo@yuriev.ru> \date 2015-2024
+/// \author Леонид Юрьев aka Leonid Yuriev <leo@yuriev.ru> \date 2015-2025
 
 
 static pgno_t env_max_pgno(const MDBX_env *env) {
@@ -11954,7 +11954,7 @@ __cold int mdbx_env_get_option(const MDBX_env *env, const MDBX_option_t option, 
   return MDBX_SUCCESS;
 }
 /// \copyright SPDX-License-Identifier: Apache-2.0
-/// \author Леонид Юрьев aka Leonid Yuriev <leo@yuriev.ru> \date 2015-2024
+/// \author Леонид Юрьев aka Leonid Yuriev <leo@yuriev.ru> \date 2015-2025
 
 
 typedef struct diff_result {
@@ -12320,7 +12320,7 @@ __hot int mdbx_estimate_range(const MDBX_txn *txn, MDBX_dbi dbi, const MDBX_val 
   return MDBX_SUCCESS;
 }
 /// \copyright SPDX-License-Identifier: Apache-2.0
-/// \author Леонид Юрьев aka Leonid Yuriev <leo@yuriev.ru> \date 2015-2024
+/// \author Леонид Юрьев aka Leonid Yuriev <leo@yuriev.ru> \date 2015-2025
 
 
 __cold int mdbx_dbi_dupsort_depthmask(const MDBX_txn *txn, MDBX_dbi dbi, uint32_t *mask) {
@@ -12769,7 +12769,7 @@ int mdbx_replace(MDBX_txn *txn, MDBX_dbi dbi, const MDBX_val *key, MDBX_val *new
   return mdbx_replace_ex(txn, dbi, key, new_data, old_data, flags, default_value_preserver, nullptr);
 }
 /// \copyright SPDX-License-Identifier: Apache-2.0
-/// \author Леонид Юрьев aka Leonid Yuriev <leo@yuriev.ru> \date 2015-2024
+/// \author Леонид Юрьев aka Leonid Yuriev <leo@yuriev.ru> \date 2015-2025
 
 
 #ifdef __SANITIZE_THREAD__
@@ -13671,7 +13671,7 @@ int mdbx_txn_info(const MDBX_txn *txn, MDBX_txn_info *info, bool scan_rlt) {
   return MDBX_SUCCESS;
 }
 /// \copyright SPDX-License-Identifier: Apache-2.0
-/// \author Леонид Юрьев aka Leonid Yuriev <leo@yuriev.ru> \date 2015-2024
+/// \author Леонид Юрьев aka Leonid Yuriev <leo@yuriev.ru> \date 2015-2025
 
 
 struct audit_ctx {
@@ -13779,7 +13779,7 @@ __cold int audit_ex(MDBX_txn *txn, size_t retired_stored, bool dont_filter_gc) {
   return rc;
 }
 /// \copyright SPDX-License-Identifier: Apache-2.0
-/// \author Леонид Юрьев aka Leonid Yuriev <leo@yuriev.ru> \date 2015-2024
+/// \author Леонид Юрьев aka Leonid Yuriev <leo@yuriev.ru> \date 2015-2025
 
 
 typedef struct MDBX_chk_internal {
@@ -15574,7 +15574,7 @@ __cold int mdbx_env_chk(MDBX_env *env, const struct MDBX_chk_callbacks *cb, MDBX
   return LOG_IFERR(rc);
 }
 /// \copyright SPDX-License-Identifier: Apache-2.0
-/// \author Леонид Юрьев aka Leonid Yuriev <leo@yuriev.ru> \date 2015-2024
+/// \author Леонид Юрьев aka Leonid Yuriev <leo@yuriev.ru> \date 2015-2025
 
 
 /*------------------------------------------------------------------------------
@@ -15882,7 +15882,7 @@ uint32_t combine_durability_flags(const uint32_t a, const uint32_t b) {
   return r;
 }
 /// \copyright SPDX-License-Identifier: Apache-2.0
-/// \author Леонид Юрьев aka Leonid Yuriev <leo@yuriev.ru> \date 2015-2024
+/// \author Леонид Юрьев aka Leonid Yuriev <leo@yuriev.ru> \date 2015-2025
 
 
 /* check against https://libmdbx.dqdkfa.ru/dead-github/issues/269 */
@@ -16053,7 +16053,7 @@ bool coherency_check_meta(const MDBX_env *env, const volatile meta_t *meta, bool
 /// \copyright SPDX-License-Identifier: Apache-2.0
 /// \note Please refer to the COPYRIGHT file for explanations license change,
 /// credits and acknowledgments.
-/// \author Леонид Юрьев aka Leonid Yuriev <leo@yuriev.ru> \date 2015-2024
+/// \author Леонид Юрьев aka Leonid Yuriev <leo@yuriev.ru> \date 2015-2025
 
 
 __cold int cursor_check(const MDBX_cursor *mc) {
@@ -16196,7 +16196,7 @@ __hot int cursor_touch(MDBX_cursor *const mc, const MDBX_val *key, const MDBX_va
     if (!cursor_is_gc(mc)) {
       need += txn->dbs[FREE_DBI].height + (size_t)3;
       /* 3) Named DBs also dirty the main DB */
-      if (cursor_is_main(mc))
+      if (!cursor_is_main(mc))
         need += txn->dbs[MAIN_DBI].height + (size_t)3;
     }
 #if xMDBX_DEBUG_SPILLING != 2
@@ -16219,7 +16219,7 @@ __hot int cursor_touch(MDBX_cursor *const mc, const MDBX_val *key, const MDBX_va
       return err;
   }
 
-  if (likely(mc->top >= 0) && !is_modifable(mc->txn, mc->pg[mc->top])) {
+  if (likely(is_pointed(mc)) && ((mc->txn->flags & MDBX_TXN_SPILLS) || !is_modifable(mc->txn, mc->pg[mc->top]))) {
     const int8_t top = mc->top;
     mc->top = 0;
     do {
@@ -18395,7 +18395,7 @@ __hot int cursor_ops(MDBX_cursor *mc, MDBX_val *key, MDBX_val *data, const MDBX_
   }
 }
 /// \copyright SPDX-License-Identifier: Apache-2.0
-/// \author Леонид Юрьев aka Leonid Yuriev <leo@yuriev.ru> \date 2015-2024
+/// \author Леонид Юрьев aka Leonid Yuriev <leo@yuriev.ru> \date 2015-2025
 
 
 #if MDBX_ENABLE_DBI_SPARSE
@@ -19092,7 +19092,7 @@ __cold const tree_t *dbi_dig(const MDBX_txn *txn, const size_t dbi, tree_t *fall
 
 int dbi_close_release(MDBX_env *env, MDBX_dbi dbi) { return dbi_defer_release(env, dbi_close_locked(env, dbi)); }
 /// \copyright SPDX-License-Identifier: Apache-2.0
-/// \author Леонид Юрьев aka Leonid Yuriev <leo@yuriev.ru> \date 2015-2024
+/// \author Леонид Юрьев aka Leonid Yuriev <leo@yuriev.ru> \date 2015-2025
 
 
 static inline size_t dpl_size2bytes(ptrdiff_t size) {
@@ -19577,7 +19577,7 @@ void dpl_release_shadows(MDBX_txn *txn) {
   dpl_clear(dl);
 }
 /// \copyright SPDX-License-Identifier: Apache-2.0
-/// \author Леонид Юрьев aka Leonid Yuriev <leo@yuriev.ru> \date 2015-2024
+/// \author Леонид Юрьев aka Leonid Yuriev <leo@yuriev.ru> \date 2015-2025
 
 
 __cold int dxb_read_header(MDBX_env *env, meta_t *dest, const int lck_exclusive, const mdbx_mode_t mode_bits) {
@@ -20902,7 +20902,7 @@ fail:
   return rc;
 }
 /// \copyright SPDX-License-Identifier: Apache-2.0
-/// \author Леонид Юрьев aka Leonid Yuriev <leo@yuriev.ru> \date 2015-2024
+/// \author Леонид Юрьев aka Leonid Yuriev <leo@yuriev.ru> \date 2015-2025
 
 
 bool env_txn0_owned(const MDBX_env *env) {
@@ -21503,7 +21503,7 @@ __cold int env_close(MDBX_env *env, bool resurrect_after_fork) {
   return rc;
 }
 /// \copyright SPDX-License-Identifier: Apache-2.0
-/// \author Леонид Юрьев aka Leonid Yuriev <leo@yuriev.ru> \date 2015-2024
+/// \author Леонид Юрьев aka Leonid Yuriev <leo@yuriev.ru> \date 2015-2025
 
 
 #if MDBX_USE_MINCORE
@@ -22849,7 +22849,7 @@ __hot pgr_t gc_alloc_single(const MDBX_cursor *const mc) {
   return gc_alloc_ex(mc, 1, ALLOC_DEFAULT);
 }
 /// \copyright SPDX-License-Identifier: Apache-2.0
-/// \author Леонид Юрьев aka Leonid Yuriev <leo@yuriev.ru> \date 2015-2024
+/// \author Леонид Юрьев aka Leonid Yuriev <leo@yuriev.ru> \date 2015-2025
 
 
 MDBX_NOTHROW_PURE_FUNCTION static bool is_lifo(const MDBX_txn *txn) {
@@ -22995,20 +22995,12 @@ static inline void zeroize_reserved(const MDBX_env *env, MDBX_val pnl) {
 
 static int gcu_loose(MDBX_txn *txn, gcu_t *ctx) {
   tASSERT(txn, txn->tw.loose_count > 0);
-  /* Return loose page numbers to tw.repnl,
-   * though usually none are left at this point.
+  /* Return loose page numbers to tw.repnl, though usually none are left at this point.
    * The pages themselves remain in dirtylist. */
   if (unlikely(!txn->tw.gc.retxl && txn->tw.gc.last_reclaimed < 1)) {
-    TRACE("%s: try allocate gc-slot for %zu loose-pages", dbg_prefix(ctx), txn->tw.loose_count);
-    int err = gc_alloc_ex(&ctx->cursor, 0, ALLOC_RESERVE).err;
-    if (err == MDBX_SUCCESS) {
-      TRACE("%s: retry since gc-slot for %zu loose-pages available", dbg_prefix(ctx), txn->tw.loose_count);
-      return MDBX_RESULT_TRUE;
-    }
-
-    /* Put loose page numbers in tw.retired_pages,
-     * since unable to return ones to tw.repnl. */
-    err = pnl_need(&txn->tw.retired_pages, txn->tw.loose_count);
+    /* Put loose page numbers in tw.retired_pages, since unable to return ones to tw.repnl. */
+    TRACE("%s: merge %zu loose-pages into %s-pages", dbg_prefix(ctx), txn->tw.loose_count, "retired");
+    int err = pnl_need(&txn->tw.retired_pages, txn->tw.loose_count);
     if (unlikely(err != MDBX_SUCCESS))
       return err;
     for (page_t *lp = txn->tw.loose_pages; lp; lp = page_next(lp)) {
@@ -23016,9 +23008,9 @@ static int gcu_loose(MDBX_txn *txn, gcu_t *ctx) {
       MDBX_ASAN_UNPOISON_MEMORY_REGION(&page_next(lp), sizeof(page_t *));
       VALGRIND_MAKE_MEM_DEFINED(&page_next(lp), sizeof(page_t *));
     }
-    TRACE("%s: append %zu loose-pages to retired-pages", dbg_prefix(ctx), txn->tw.loose_count);
   } else {
     /* Room for loose pages + temp PNL with same */
+    TRACE("%s: merge %zu loose-pages into %s-pages", dbg_prefix(ctx), txn->tw.loose_count, "reclaimed");
     int err = pnl_need(&txn->tw.repnl, 2 * txn->tw.loose_count + 2);
     if (unlikely(err != MDBX_SUCCESS))
       return err;
@@ -23034,7 +23026,6 @@ static int gcu_loose(MDBX_txn *txn, gcu_t *ctx) {
     MDBX_PNL_SETSIZE(loose, count);
     pnl_sort(loose, txn->geo.first_unallocated);
     pnl_merge(txn->tw.repnl, loose);
-    TRACE("%s: append %zu loose-pages to reclaimed-pages", dbg_prefix(ctx), txn->tw.loose_count);
   }
 
   /* filter-out list of dirty-pages from loose-pages */
@@ -23827,7 +23818,7 @@ bailout:
   return rc;
 }
 /// \copyright SPDX-License-Identifier: Apache-2.0
-/// \author Леонид Юрьев aka Leonid Yuriev <leo@yuriev.ru> \date 2015-2024
+/// \author Леонид Юрьев aka Leonid Yuriev <leo@yuriev.ru> \date 2015-2025
 
 
 static void mdbx_init(void);
@@ -24292,7 +24283,7 @@ const char *__asan_default_options(void) {
 #endif /* __SANITIZE_ADDRESS__ */
 
 /// \copyright SPDX-License-Identifier: Apache-2.0
-/// \author Леонид Юрьев aka Leonid Yuriev <leo@yuriev.ru> \date 2015-2024
+/// \author Леонид Юрьев aka Leonid Yuriev <leo@yuriev.ru> \date 2015-2025
 
 #if !(defined(_WIN32) || defined(_WIN64))
 /*----------------------------------------------------------------------------*
@@ -25147,7 +25138,7 @@ void lck_txn_unlock(MDBX_env *env) {
 
 #endif /* !Windows LCK-implementation */
 /// \copyright SPDX-License-Identifier: Apache-2.0
-/// \author Леонид Юрьев aka Leonid Yuriev <leo@yuriev.ru> \date 2015-2024
+/// \author Леонид Юрьев aka Leonid Yuriev <leo@yuriev.ru> \date 2015-2025
 
 #if defined(_WIN32) || defined(_WIN64)
 
@@ -25751,7 +25742,7 @@ MDBX_INTERNAL int lck_rpid_check(MDBX_env *env, uint32_t pid) {
 
 #endif /* Windows */
 /// \copyright SPDX-License-Identifier: Apache-2.0
-/// \author Леонид Юрьев aka Leonid Yuriev <leo@yuriev.ru> \date 2015-2024
+/// \author Леонид Юрьев aka Leonid Yuriev <leo@yuriev.ru> \date 2015-2025
 
 
 __cold static int lck_setup_locked(MDBX_env *env) {
@@ -25923,7 +25914,7 @@ void mincore_clean_cache(const MDBX_env *const env) {
   memset(env->lck->mincore_cache.begin, -1, sizeof(env->lck->mincore_cache.begin));
 }
 /// \copyright SPDX-License-Identifier: Apache-2.0
-/// \author Леонид Юрьев aka Leonid Yuriev <leo@yuriev.ru> \date 2015-2024
+/// \author Леонид Юрьев aka Leonid Yuriev <leo@yuriev.ru> \date 2015-2025
 
 
 __cold void debug_log_va(int level, const char *function, int line, const char *fmt, va_list args) {
@@ -26171,7 +26162,7 @@ __cold int mdbx_setup_debug(MDBX_log_level_t level, MDBX_debug_flags_t flags, MD
   return setup_debug(level, flags, thunk, nullptr, 0);
 }
 /// \copyright SPDX-License-Identifier: Apache-2.0
-/// \author Леонид Юрьев aka Leonid Yuriev <leo@yuriev.ru> \date 2015-2024
+/// \author Леонид Юрьев aka Leonid Yuriev <leo@yuriev.ru> \date 2015-2025
 
 
 typedef struct meta_snap {
@@ -26826,7 +26817,7 @@ __cold int meta_validate_copy(MDBX_env *env, const meta_t *meta, meta_t *dest) {
   return meta_validate(env, dest, data_page(meta), bytes2pgno(env, ptr_dist(meta, env->dxb_mmap.base)), nullptr);
 }
 /// \copyright SPDX-License-Identifier: Apache-2.0
-/// \author Леонид Юрьев aka Leonid Yuriev <leo@yuriev.ru> \date 2015-2024
+/// \author Леонид Юрьев aka Leonid Yuriev <leo@yuriev.ru> \date 2015-2025
 
 
 bsr_t mvcc_bind_slot(MDBX_env *env) {
@@ -27241,7 +27232,7 @@ __cold txnid_t mvcc_kick_laggards(MDBX_env *env, const txnid_t straggler) {
 /// \copyright SPDX-License-Identifier: Apache-2.0
 /// \note Please refer to the COPYRIGHT file for explanations license change,
 /// credits and acknowledgments.
-/// \author Леонид Юрьев aka Leonid Yuriev <leo@yuriev.ru> \date 2015-2024
+/// \author Леонид Юрьев aka Leonid Yuriev <leo@yuriev.ru> \date 2015-2025
 
 
 __hot int __must_check_result node_add_dupfix(MDBX_cursor *mc, size_t indx, const MDBX_val *key) {
@@ -27603,7 +27594,7 @@ __hot struct node_search_result node_search(MDBX_cursor *mc, const MDBX_val *key
   return ret;
 }
 /// \copyright SPDX-License-Identifier: Apache-2.0
-/// \author Леонид Юрьев aka Leonid Yuriev <leo@yuriev.ru> \date 2015-2024
+/// \author Леонид Юрьев aka Leonid Yuriev <leo@yuriev.ru> \date 2015-2025
 ///
 /// https://en.wikipedia.org/wiki/Operating_system_abstraction_layer
 
@@ -31068,7 +31059,7 @@ void osal_ctor(void) {
 
 void osal_dtor(void) {}
 /// \copyright SPDX-License-Identifier: Apache-2.0
-/// \author Леонид Юрьев aka Leonid Yuriev <leo@yuriev.ru> \date 2015-2024
+/// \author Леонид Юрьев aka Leonid Yuriev <leo@yuriev.ru> \date 2015-2025
 
 
 __cold int MDBX_PRINTF_ARGS(2, 3) bad_page(const page_t *mp, const char *fmt, ...) {
@@ -31550,7 +31541,7 @@ pgr_t page_get_large(const MDBX_cursor *const mc, const pgno_t pgno, const txnid
   return page_get_inline(P_ILL_BITS | P_BRANCH | P_LEAF | P_DUPFIX, mc, pgno, front);
 }
 /// \copyright SPDX-License-Identifier: Apache-2.0
-/// \author Леонид Юрьев aka Leonid Yuriev <leo@yuriev.ru> \date 2015-2024
+/// \author Леонид Юрьев aka Leonid Yuriev <leo@yuriev.ru> \date 2015-2025
 
 
 int iov_init(MDBX_txn *const txn, iov_ctx_t *ctx, size_t items, size_t npages, mdbx_filehandle_t fd,
@@ -31734,7 +31725,7 @@ int iov_page(MDBX_txn *txn, iov_ctx_t *ctx, page_t *dp, size_t npages) {
   return MDBX_SUCCESS;
 }
 /// \copyright SPDX-License-Identifier: Apache-2.0
-/// \author Леонид Юрьев aka Leonid Yuriev <leo@yuriev.ru> \date 2015-2024
+/// \author Леонид Юрьев aka Leonid Yuriev <leo@yuriev.ru> \date 2015-2025
 
 
 static inline tree_t *outer_tree(MDBX_cursor *mc) {
@@ -32477,7 +32468,7 @@ size_t page_subleaf2_reserve(const MDBX_env *env, size_t host_page_room, size_t 
   return reserve + (subpage_len & 1);
 }
 /// \copyright SPDX-License-Identifier: Apache-2.0
-/// \author Леонид Юрьев aka Leonid Yuriev <leo@yuriev.ru> \date 2015-2024
+/// \author Леонид Юрьев aka Leonid Yuriev <leo@yuriev.ru> \date 2015-2025
 
 
 pnl_t pnl_alloc(size_t size) {
@@ -32712,7 +32703,7 @@ __hot __noinline size_t pnl_search_nochk(const pnl_t pnl, pgno_t pgno) {
   return it - begin + 1;
 }
 /// \copyright SPDX-License-Identifier: Apache-2.0
-/// \author Леонид Юрьев aka Leonid Yuriev <leo@yuriev.ru> \date 2015-2024
+/// \author Леонид Юрьев aka Leonid Yuriev <leo@yuriev.ru> \date 2015-2025
 
 
 #if MDBX_ENABLE_REFUND
@@ -32923,7 +32914,7 @@ bool txn_refund(MDBX_txn *txn) {
 
 #endif /* MDBX_ENABLE_REFUND */
 /// \copyright SPDX-License-Identifier: Apache-2.0
-/// \author Леонид Юрьев aka Leonid Yuriev <leo@yuriev.ru> \date 2015-2024
+/// \author Леонид Юрьев aka Leonid Yuriev <leo@yuriev.ru> \date 2015-2025
 
 
 void spill_remove(MDBX_txn *txn, size_t idx, size_t npages) {
@@ -33353,7 +33344,7 @@ done:
              : MDBX_TXN_FULL;
 }
 /// \copyright SPDX-License-Identifier: Apache-2.0
-/// \author Леонид Юрьев aka Leonid Yuriev <leo@yuriev.ru> \date 2015-2024
+/// \author Леонид Юрьев aka Leonid Yuriev <leo@yuriev.ru> \date 2015-2025
 
 
 int tbl_setup(const MDBX_env *env, kvx_t *const kvx, const tree_t *const db) {
@@ -33447,7 +33438,7 @@ int tbl_fetch(MDBX_txn *txn, size_t dbi) {
   return MDBX_SUCCESS;
 }
 /// \copyright SPDX-License-Identifier: Apache-2.0
-/// \author Леонид Юрьев aka Leonid Yuriev <leo@yuriev.ru> \date 2015-2024
+/// \author Леонид Юрьев aka Leonid Yuriev <leo@yuriev.ru> \date 2015-2025
 
 
 typedef struct rthc_entry {
@@ -33999,7 +33990,7 @@ __cold void rthc_dtor(const uint32_t current_pid) {
 /// \copyright SPDX-License-Identifier: Apache-2.0
 /// \note Please refer to the COPYRIGHT file for explanations license change,
 /// credits and acknowledgments.
-/// \author Леонид Юрьев aka Leonid Yuriev <leo@yuriev.ru> \date 2015-2024
+/// \author Леонид Юрьев aka Leonid Yuriev <leo@yuriev.ru> \date 2015-2025
 
 
 static MDBX_cursor *cursor_clone(const MDBX_cursor *csrc, cursor_couple_t *couple) {
@@ -35552,7 +35543,7 @@ int tree_propagate_key(MDBX_cursor *mc, const MDBX_val *key) {
 /// \copyright SPDX-License-Identifier: Apache-2.0
 /// \note Please refer to the COPYRIGHT file for explanations license change,
 /// credits and acknowledgments.
-/// \author Леонид Юрьев aka Leonid Yuriev <leo@yuriev.ru> \date 2015-2024
+/// \author Леонид Юрьев aka Leonid Yuriev <leo@yuriev.ru> \date 2015-2025
 
 
 /* Search for the lowest key under the current branch page.
@@ -35689,7 +35680,7 @@ __hot __noinline int tree_search_finalize(MDBX_cursor *mc, const MDBX_val *key, 
   return MDBX_SUCCESS;
 }
 /// \copyright SPDX-License-Identifier: Apache-2.0
-/// \author Леонид Юрьев aka Leonid Yuriev <leo@yuriev.ru> \date 2015-2024
+/// \author Леонид Юрьев aka Leonid Yuriev <leo@yuriev.ru> \date 2015-2025
 
 
 static inline size_t txl_size2bytes(const size_t size) {
@@ -35787,7 +35778,7 @@ __hot bool txl_contain(const txl_t txl, txnid_t id) {
   return false;
 }
 /// \copyright SPDX-License-Identifier: Apache-2.0
-/// \author Леонид Юрьев aka Leonid Yuriev <leo@yuriev.ru> \date 2015-2024
+/// \author Леонид Юрьев aka Leonid Yuriev <leo@yuriev.ru> \date 2015-2025
 
 
 __hot txnid_t txn_snapshot_oldest(const MDBX_txn *const txn) {
@@ -36868,7 +36859,7 @@ int txn_unpark(MDBX_txn *txn) {
   return err ? err : MDBX_OUSTED;
 }
 /// \copyright SPDX-License-Identifier: Apache-2.0
-/// \author Леонид Юрьев aka Leonid Yuriev <leo@yuriev.ru> \date 2015-2024
+/// \author Леонид Юрьев aka Leonid Yuriev <leo@yuriev.ru> \date 2015-2025
 
 
 MDBX_MAYBE_UNUSED MDBX_NOTHROW_CONST_FUNCTION MDBX_INTERNAL unsigned log2n_powerof2(size_t value_uintptr) {
@@ -36899,7 +36890,7 @@ MDBX_NOTHROW_CONST_FUNCTION MDBX_INTERNAL uint64_t rrxmrrxmsx_0(uint64_t v) {
   return v ^ v >> 28;
 }
 /// \copyright SPDX-License-Identifier: Apache-2.0
-/// \author Леонид Юрьев aka Leonid Yuriev <leo@yuriev.ru> \date 2015-2024
+/// \author Леонид Юрьев aka Leonid Yuriev <leo@yuriev.ru> \date 2015-2025
 
 
 typedef struct walk_ctx {
@@ -37188,7 +37179,7 @@ __cold int walk_pages(MDBX_txn *txn, walk_func *visitor, void *user, walk_option
   return rc;
 }
 /// \copyright SPDX-License-Identifier: Apache-2.0
-/// \author Леонид Юрьев aka Leonid Yuriev <leo@yuriev.ru> \date 2015-2024
+/// \author Леонид Юрьев aka Leonid Yuriev <leo@yuriev.ru> \date 2015-2025
 
 #if defined(_WIN32) || defined(_WIN64)
 
@@ -37363,10 +37354,10 @@ __dll_export
         0,
         13,
         3,
-        92,
+        105,
         "", /* pre-release suffix of SemVer
-                                        0.13.3.92 */
-        {"2025-01-12T22:08:00+03:00", "00a78ca419f91633a3c27733824d6c94ee066b85", "bd45668feebee801ea2f5ba8cf2ab0ae9ba36318", "v0.13.3-92-gbd45668f"},
+                                        0.13.3.105 */
+        {"2025-01-27T12:12:38+03:00", "3befefbee69841092514902d1bb08760928e985e", "b46d2def80e0fc8924b280c7d1e1fe00de25b391", "v0.13.3-105-gb46d2def"},
         sourcery};
 
 __dll_export

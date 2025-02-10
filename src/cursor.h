@@ -41,7 +41,8 @@ class MDBX_Cursor : public Napi::ObjectWrap<MDBX_Cursor> {
 
 	Napi::Value Set(const Napi::CallbackInfo &info);
 	Napi::Value Range(const Napi::CallbackInfo &info);
-
+	Napi::Value Pos(const Napi::CallbackInfo &info);
+	
 	void Put(const Napi::CallbackInfo &info);
 	void Del(const Napi::CallbackInfo &info);
 

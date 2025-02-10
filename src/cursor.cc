@@ -47,6 +47,7 @@ void MDBX_Cursor::Init(Napi::Env env) {
 
 			InstanceMethod("set", &MDBX_Cursor::Set),
 			InstanceMethod("range", &MDBX_Cursor::Range),
+			InstanceMethod("pos", &MDBX_Cursor::Pos),
 
 			InstanceMethod("put", &MDBX_Cursor::Put),
 			InstanceMethod("del", &MDBX_Cursor::Del),
@@ -315,6 +316,45 @@ Napi::Value MDBX_Cursor::Set(const Napi::CallbackInfo &info) { return _commonSet
 
 Napi::Value MDBX_Cursor::Range(const Napi::CallbackInfo &info) { return _commonSet(info, MDBX_SET_RANGE, MDBX_GET_BOTH_RANGE); }
 
+Napi::Value MDBX_Cursor::Pos(const Napi::CallbackInfo &info) {
+	Napi::Env env = info.Env();
+
+	ptrdiff_t total_items, distance_items;
+	MDBX_cursor *cursor;
+	int rc;
+
+	rc = mdbx_cursor_open(this->txn, *this->dbi, &cursor);
+	if (rc) {
+		Utils::throwMdbxError(env, rc);
+		return env.Undefined();
+	}
+
+	rc = mdbx_cursor_get(cursor, nullptr, nullptr, MDBX_FIRST);
+	if (rc) {
+		mdbx_cursor_close(cursor);
+		Utils::throwMdbxError(env, rc);
+		return env.Undefined();
+	}
+
+	rc = mdbx_estimate_move(cursor, nullptr, nullptr, MDBX_LAST, &total_items);
+	mdbx_cursor_close(cursor);
+	if (rc) {
+		Utils::throwMdbxError(env, rc);
+		return env.Undefined();
+	}
+
+	rc = mdbx_estimate_move(this->cursor, nullptr, nullptr, MDBX_FIRST, &distance_items);
+	if (rc) {
+		mdbx_cursor_close(cursor);
+		Utils::throwMdbxError(env, rc);
+		return env.Undefined();
+	}
+
+	double percent = double(abs(distance_items)) * 100 / double(total_items);
+
+	return Napi::Number::New(env, percent);
+}
+
 void MDBX_Cursor::Put(const Napi::CallbackInfo &info) {
 	Napi::Env env = info.Env();
 
@@ -421,6 +461,9 @@ void MDBX_Cursor::Bind(const Napi::CallbackInfo &info) {
 }
 
 void MDBX_Cursor::Close(const Napi::CallbackInfo &info) {
+	this->_keyBuffer.clear();
+	this->_dataBuffer.clear();
+
 	if (this->cursor) {
 		mdbx_cursor_close(this->cursor);
 		this->cursor = nullptr;

@@ -20,3 +20,4 @@
 /libmdbx/*.so
 
 *.log
+.local

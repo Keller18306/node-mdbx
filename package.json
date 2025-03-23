@@ -13,7 +13,8 @@
     "build": "node-gyp -j 4 build",
     "rebuild:dev": "node-gyp -j 4 rebuild --debug",
     "rebuild": "node-gyp -j 4 rebuild",
-    "clean": "node-gyp clean"
+    "clean": "node-gyp clean",
+    "update-mdbx": "node updateLibmdbx.js"
   },
   "bin": {
     "mdbx_chk": "./build/Release/mdbx_chk",

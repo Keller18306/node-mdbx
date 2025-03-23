@@ -9,10 +9,10 @@
   "scripts": {
     "install": "npm run clean && node-gyp-build",
     "configure": "node-gyp configure",
-    "build:dev": "node-gyp -j 4 build --debug",
-    "build": "node-gyp -j 4 build",
-    "rebuild:dev": "node-gyp -j 4 rebuild --debug",
-    "rebuild": "node-gyp -j 4 rebuild",
+    "build:dev": "node-gyp -j max build --debug",
+    "build": "node-gyp -j max build",
+    "rebuild:dev": "node-gyp -j max rebuild --debug",
+    "rebuild": "node-gyp -j max rebuild",
     "clean": "node-gyp clean",
     "update-mdbx": "node updateLibmdbx.js"
   },

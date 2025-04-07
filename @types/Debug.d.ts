@@ -1,8 +1,12 @@
-export interface SetupDebugOption {
-    dump?: boolean;
-    legacyMultiopen?: boolean;
-    legacyOverlap?: boolean;
-    dontUpgrade?: boolean;
-}
+import '../index';
 
-export function setup_debug(options: SetupDebugOption): void;
+declare module '../index' {
+    function setup_debug(options: SetupDebugOption): void;
+
+    interface SetupDebugOption {
+        dump?: boolean;
+        legacyMultiopen?: boolean;
+        legacyOverlap?: boolean;
+        dontUpgrade?: boolean;
+    }
+}

@@ -7,7 +7,7 @@
   "license": "MIT",
   "private": true,
   "scripts": {
-    "install": "npm run clean && node-gyp-build",
+    "install": "node ./cleanDebug.js && node-gyp-build",
     "configure": "node-gyp configure",
     "build:dev": "node-gyp -j max build --debug",
     "build": "node-gyp -j max build",
@@ -32,6 +32,7 @@
     "./libmdbx/man1/mdbx_load.1",
     "./libmdbx/man1/mdbx_stat.1"
   ],
+  "types": "index.d.ts",
   "dependencies": {
     "node-gyp-build": "^4.8.4",
     "node-addon-api": "^8.3.0"

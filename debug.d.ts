@@ -1,1 +1,2 @@
-export * from './@types';
+import * as mdbx from './index';
+export = mdbx;

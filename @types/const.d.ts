@@ -1,6 +1,7 @@
-import { Build } from './Build';
-import { Version } from './Version';
+import '../index';
 
-export const VERSION_STRING: string;
-export const version: Version;
-export const build: Build;
+declare module '../index' {
+    const VERSION_STRING: string;
+    const version: Version;
+    const build: Build;
+}

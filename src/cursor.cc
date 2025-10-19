@@ -1,5 +1,6 @@
 #include "cursor.h"
 
+#include "dbi.h"
 #include "txn.h"
 
 ValueType strToKeyTypeNum(std::string str) {
@@ -23,38 +24,38 @@ ValueType strToKeyTypeNum(std::string str) {
 	// throw std::runtime_error("Unknown data type");
 }
 
-void MDBX_Cursor::Init(Napi::Env env) {
+void MDBX_Native_Cursor::Init(Napi::Env env) {
 	Napi::HandleScope scope(env);
 
 	Napi::Function func = DefineClass(env, "MDBXCursor",
 		{
-			InstanceMethod("getKey", &MDBX_Cursor::GetKey),
-			InstanceMethod("getValue", &MDBX_Cursor::GetValue),
+			InstanceMethod("getKey", &MDBX_Native_Cursor::GetKey),
+			InstanceMethod("getValue", &MDBX_Native_Cursor::GetValue),
 
-			InstanceMethod("count", &MDBX_Cursor::Count),
-			InstanceMethod("dupStat", &MDBX_Cursor::DupStat),
+			InstanceMethod("count", &MDBX_Native_Cursor::Count),
+			InstanceMethod("dupStat", &MDBX_Native_Cursor::DupStat),
 
-			InstanceMethod("first", &MDBX_Cursor::First),
-			InstanceMethod("firstDup", &MDBX_Cursor::FirstDup),
-			InstanceMethod("last", &MDBX_Cursor::Last),
-			InstanceMethod("lastDup", &MDBX_Cursor::LastDup),
-			InstanceMethod("next", &MDBX_Cursor::Next),
-			InstanceMethod("nextDup", &MDBX_Cursor::NextDup),
-			InstanceMethod("nextNoDup", &MDBX_Cursor::NextNoDup),
-			InstanceMethod("prev", &MDBX_Cursor::Prev),
-			InstanceMethod("prevDup", &MDBX_Cursor::PrevDup),
-			InstanceMethod("prevNoDup", &MDBX_Cursor::PrevNoDup),
+			InstanceMethod("first", &MDBX_Native_Cursor::First),
+			InstanceMethod("firstDup", &MDBX_Native_Cursor::FirstDup),
+			InstanceMethod("last", &MDBX_Native_Cursor::Last),
+			InstanceMethod("lastDup", &MDBX_Native_Cursor::LastDup),
+			InstanceMethod("next", &MDBX_Native_Cursor::Next),
+			InstanceMethod("nextDup", &MDBX_Native_Cursor::NextDup),
+			InstanceMethod("nextNoDup", &MDBX_Native_Cursor::NextNoDup),
+			InstanceMethod("prev", &MDBX_Native_Cursor::Prev),
+			InstanceMethod("prevDup", &MDBX_Native_Cursor::PrevDup),
+			InstanceMethod("prevNoDup", &MDBX_Native_Cursor::PrevNoDup),
 
-			InstanceMethod("set", &MDBX_Cursor::Set),
-			InstanceMethod("range", &MDBX_Cursor::Range),
-			InstanceMethod("pos", &MDBX_Cursor::Pos),
+			InstanceMethod("set", &MDBX_Native_Cursor::Set),
+			InstanceMethod("range", &MDBX_Native_Cursor::Range),
+			InstanceMethod("pos", &MDBX_Native_Cursor::Pos),
 
-			InstanceMethod("put", &MDBX_Cursor::Put),
-			InstanceMethod("del", &MDBX_Cursor::Del),
+			InstanceMethod("put", &MDBX_Native_Cursor::Put),
+			InstanceMethod("del", &MDBX_Native_Cursor::Del),
 
-			InstanceMethod("reset", &MDBX_Cursor::Reset),
-			InstanceMethod("bind", &MDBX_Cursor::Bind),
-			InstanceMethod("close", &MDBX_Cursor::Close),
+			InstanceMethod("reset", &MDBX_Native_Cursor::Reset),
+			InstanceMethod("bind", &MDBX_Native_Cursor::Bind),
+			InstanceMethod("close", &MDBX_Native_Cursor::Close),
 		});
 
 	Napi::FunctionReference *constructor = new Napi::FunctionReference();
@@ -63,24 +64,30 @@ void MDBX_Cursor::Init(Napi::Env env) {
 
 	EnvInstanceData *instanceData = Utils::envInstanceData(env);
 	instanceData->cursor = constructor;
+
+	env.AddCleanupHook([](Napi::FunctionReference *ctor) { delete ctor; }, constructor);
 }
 
-MDBX_Cursor::MDBX_Cursor(const Napi::CallbackInfo &info) : Napi::ObjectWrap<MDBX_Cursor>(info) {
+MDBX_Native_Cursor::MDBX_Native_Cursor(const Napi::CallbackInfo &info) : Napi::ObjectWrap<MDBX_Native_Cursor>(info) {
 	Napi::Env env = info.Env();
 
-	if (info.Length() < 2 || !info[0].IsExternal() || !info[1].IsExternal()) {
-		Napi::TypeError::New(info.Env(), "Expected MDBX_env pointer or dbi").ThrowAsJavaScriptException();
+	if (!info[0].IsObject()) {
+		Napi::TypeError::New(info.Env(), "Expected MDBX_Native_Dbi").ThrowAsJavaScriptException();
 		return;
 	}
 
 	int rc;
-	MDBX_txn_flags_t txnFlags = MDBX_TXN_READWRITE;
 
-	this->env = info[0].As<Napi::External<MDBX_env>>().Data();
-	this->dbi = info[1].As<Napi::External<MDBX_dbi>>().Data();
+	Napi::Object dbiObj = info[0].As<Napi::Object>();
+	MDBX_Native_Dbi *dbiNative = Napi::ObjectWrap<MDBX_Native_Dbi>::Unwrap(dbiObj);
 
-	if (info[2].IsObject()) {
-		Napi::Object options = info[2].ToObject();
+	this->nativeDbiRef_ = Napi::Persistent(dbiObj);
+	this->nativeDbiRef_.Ref();
+
+	this->dbi = dbiNative->dbi;
+
+	if (info[1].IsObject()) {
+		Napi::Object options = info[1].ToObject();
 
 		if (options.Get("keyType").IsString()) {
 			std::string type = options.Get("keyType").ToString();
@@ -116,7 +123,7 @@ MDBX_Cursor::MDBX_Cursor(const Napi::CallbackInfo &info) : Napi::ObjectWrap<MDBX
 
 		if (options.Get("txn").IsObject()) {
 			try {
-				txn = Utils::argToMdbxTxn(env, options.Get("txn"));
+				this->txn = Utils::argToMdbxTxn(env, options.Get("txn"));
 			} catch (const Napi::Error &e) {
 				e.ThrowAsJavaScriptException();
 				return;
@@ -124,41 +131,24 @@ MDBX_Cursor::MDBX_Cursor(const Napi::CallbackInfo &info) : Napi::ObjectWrap<MDBX
 		}
 	}
 
-	if (!txn) {
-		this->closeTxn = true;
-
-		unsigned int envFlags;
-		rc = mdbx_env_get_flags(this->env, &envFlags);
-		if (rc) {
-			Utils::throwMdbxError(env, rc);
-			return;
-		}
-
-		if (envFlags & MDBX_RDONLY) {
-			txnFlags = MDBX_TXN_RDONLY;
-		}
-
-		rc = mdbx_txn_begin(this->env, nullptr, txnFlags, &this->txn);
-		if (rc) {
-			Utils::throwMdbxError(env, rc);
-			return;
-		}
+	if (!this->txn) {
+		this->txn = dbiNative->txn;
 	}
 
-	rc = mdbx_cursor_open(this->txn, *this->dbi, &this->cursor);
+	rc = mdbx_cursor_open(this->txn, this->dbi, &this->cursor);
 	if (rc) {
 		Utils::throwMdbxError(env, rc);
 		return;
 	}
 
-	rc = mdbx_dbi_flags(this->txn, *this->dbi, &this->dbiFlags);
+	rc = mdbx_dbi_flags(this->txn, this->dbi, &this->dbiFlags);
 	if (rc) {
 		Utils::throwMdbxError(env, rc);
 		return;
 	}
 }
 
-Napi::Value MDBX_Cursor::GetKey(const Napi::CallbackInfo &info) {
+Napi::Value MDBX_Native_Cursor::GetKey(const Napi::CallbackInfo &info) {
 	Napi::Env env = info.Env();
 
 	if (!this->hasData) {
@@ -168,7 +158,7 @@ Napi::Value MDBX_Cursor::GetKey(const Napi::CallbackInfo &info) {
 	return Utils::vectorBufferToArg(env, this->keyType, this->isIntBE, this->_keyBuffer);
 }
 
-Napi::Value MDBX_Cursor::GetValue(const Napi::CallbackInfo &info) {
+Napi::Value MDBX_Native_Cursor::GetValue(const Napi::CallbackInfo &info) {
 	Napi::Env env = info.Env();
 
 	if (!this->hasData) {
@@ -178,7 +168,7 @@ Napi::Value MDBX_Cursor::GetValue(const Napi::CallbackInfo &info) {
 	return Utils::vectorBufferToArg(env, this->dataType, this->isIntBE, this->_dataBuffer);
 }
 
-Napi::Value MDBX_Cursor::Count(const Napi::CallbackInfo &info) {
+Napi::Value MDBX_Native_Cursor::Count(const Napi::CallbackInfo &info) {
 	size_t count;
 
 	if (!(this->dbiFlags & MDBX_DUPSORT)) {
@@ -194,7 +184,7 @@ Napi::Value MDBX_Cursor::Count(const Napi::CallbackInfo &info) {
 	return Napi::Number::New(info.Env(), count);
 }
 
-Napi::Value MDBX_Cursor::DupStat(const Napi::CallbackInfo &info) {
+Napi::Value MDBX_Native_Cursor::DupStat(const Napi::CallbackInfo &info) {
 	MDBX_stat stat;
 
 	if (!(this->dbiFlags & MDBX_DUPSORT)) {
@@ -210,7 +200,7 @@ Napi::Value MDBX_Cursor::DupStat(const Napi::CallbackInfo &info) {
 	return Utils::mdbxStatToJsObject(info.Env(), stat);
 }
 
-Napi::Value MDBX_Cursor::_commonMove(const Napi::CallbackInfo &info, MDBX_cursor_op op, bool checkDupFlag) {
+Napi::Value MDBX_Native_Cursor::_commonMove(const Napi::CallbackInfo &info, MDBX_cursor_op op, bool checkDupFlag) {
 	Napi::Env env = info.Env();
 
 	if (checkDupFlag && !(this->dbiFlags & MDBX_DUPSORT)) {
@@ -239,7 +229,7 @@ Napi::Value MDBX_Cursor::_commonMove(const Napi::CallbackInfo &info, MDBX_cursor
 	return Utils::vectorBufferToArg(env, this->keyType, this->isIntBE, this->_keyBuffer);
 }
 
-Napi::Value MDBX_Cursor::_commonSet(const Napi::CallbackInfo &info, MDBX_cursor_op opKeyOnly, MDBX_cursor_op opKeyValue) {
+Napi::Value MDBX_Native_Cursor::_commonSet(const Napi::CallbackInfo &info, MDBX_cursor_op opKeyOnly, MDBX_cursor_op opKeyValue) {
 	Napi::Env env = info.Env();
 
 	if (info.Length() < 1) {
@@ -292,38 +282,38 @@ Napi::Value MDBX_Cursor::_commonSet(const Napi::CallbackInfo &info, MDBX_cursor_
 	return Utils::vectorBufferToArg(env, this->keyType, this->isIntBE, this->_keyBuffer);
 }
 
-Napi::Value MDBX_Cursor::First(const Napi::CallbackInfo &info) { return _commonMove(info, MDBX_FIRST, false); }
+Napi::Value MDBX_Native_Cursor::First(const Napi::CallbackInfo &info) { return _commonMove(info, MDBX_FIRST, false); }
 
-Napi::Value MDBX_Cursor::FirstDup(const Napi::CallbackInfo &info) { return _commonMove(info, MDBX_FIRST_DUP, true); }
+Napi::Value MDBX_Native_Cursor::FirstDup(const Napi::CallbackInfo &info) { return _commonMove(info, MDBX_FIRST_DUP, true); }
 
-Napi::Value MDBX_Cursor::Last(const Napi::CallbackInfo &info) { return _commonMove(info, MDBX_LAST, false); }
+Napi::Value MDBX_Native_Cursor::Last(const Napi::CallbackInfo &info) { return _commonMove(info, MDBX_LAST, false); }
 
-Napi::Value MDBX_Cursor::LastDup(const Napi::CallbackInfo &info) { return _commonMove(info, MDBX_LAST_DUP, true); }
+Napi::Value MDBX_Native_Cursor::LastDup(const Napi::CallbackInfo &info) { return _commonMove(info, MDBX_LAST_DUP, true); }
 
-Napi::Value MDBX_Cursor::Next(const Napi::CallbackInfo &info) { return _commonMove(info, MDBX_NEXT, false); }
+Napi::Value MDBX_Native_Cursor::Next(const Napi::CallbackInfo &info) { return _commonMove(info, MDBX_NEXT, false); }
 
-Napi::Value MDBX_Cursor::NextDup(const Napi::CallbackInfo &info) { return _commonMove(info, MDBX_NEXT_DUP, true); }
+Napi::Value MDBX_Native_Cursor::NextDup(const Napi::CallbackInfo &info) { return _commonMove(info, MDBX_NEXT_DUP, true); }
 
-Napi::Value MDBX_Cursor::NextNoDup(const Napi::CallbackInfo &info) { return _commonMove(info, MDBX_NEXT_NODUP, false); }
+Napi::Value MDBX_Native_Cursor::NextNoDup(const Napi::CallbackInfo &info) { return _commonMove(info, MDBX_NEXT_NODUP, false); }
 
-Napi::Value MDBX_Cursor::Prev(const Napi::CallbackInfo &info) { return _commonMove(info, MDBX_PREV, false); }
+Napi::Value MDBX_Native_Cursor::Prev(const Napi::CallbackInfo &info) { return _commonMove(info, MDBX_PREV, false); }
 
-Napi::Value MDBX_Cursor::PrevDup(const Napi::CallbackInfo &info) { return _commonMove(info, MDBX_PREV_DUP, true); }
+Napi::Value MDBX_Native_Cursor::PrevDup(const Napi::CallbackInfo &info) { return _commonMove(info, MDBX_PREV_DUP, true); }
 
-Napi::Value MDBX_Cursor::PrevNoDup(const Napi::CallbackInfo &info) { return _commonMove(info, MDBX_PREV_NODUP, false); }
+Napi::Value MDBX_Native_Cursor::PrevNoDup(const Napi::CallbackInfo &info) { return _commonMove(info, MDBX_PREV_NODUP, false); }
 
-Napi::Value MDBX_Cursor::Set(const Napi::CallbackInfo &info) { return _commonSet(info, MDBX_SET_KEY, MDBX_GET_BOTH); }
+Napi::Value MDBX_Native_Cursor::Set(const Napi::CallbackInfo &info) { return _commonSet(info, MDBX_SET_KEY, MDBX_GET_BOTH); }
 
-Napi::Value MDBX_Cursor::Range(const Napi::CallbackInfo &info) { return _commonSet(info, MDBX_SET_RANGE, MDBX_GET_BOTH_RANGE); }
+Napi::Value MDBX_Native_Cursor::Range(const Napi::CallbackInfo &info) { return _commonSet(info, MDBX_SET_RANGE, MDBX_GET_BOTH_RANGE); }
 
-Napi::Value MDBX_Cursor::Pos(const Napi::CallbackInfo &info) {
+Napi::Value MDBX_Native_Cursor::Pos(const Napi::CallbackInfo &info) {
 	Napi::Env env = info.Env();
 
 	ptrdiff_t total_items, distance_items;
 	MDBX_cursor *cursor;
 	int rc;
 
-	rc = mdbx_cursor_open(this->txn, *this->dbi, &cursor);
+	rc = mdbx_cursor_open(this->txn, this->dbi, &cursor);
 	if (rc) {
 		Utils::throwMdbxError(env, rc);
 		return env.Undefined();
@@ -355,7 +345,7 @@ Napi::Value MDBX_Cursor::Pos(const Napi::CallbackInfo &info) {
 	return Napi::Number::New(env, percent);
 }
 
-void MDBX_Cursor::Put(const Napi::CallbackInfo &info) {
+void MDBX_Native_Cursor::Put(const Napi::CallbackInfo &info) {
 	Napi::Env env = info.Env();
 
 	MDBX_val key, data;
@@ -390,7 +380,7 @@ void MDBX_Cursor::Put(const Napi::CallbackInfo &info) {
 	}
 }
 
-void MDBX_Cursor::Del(const Napi::CallbackInfo &info) {
+void MDBX_Native_Cursor::Del(const Napi::CallbackInfo &info) {
 	Napi::Env env = info.Env();
 
 	unsigned int flags = MDBX_put_flags::MDBX_UPSERT;
@@ -408,20 +398,15 @@ void MDBX_Cursor::Del(const Napi::CallbackInfo &info) {
 	}
 }
 
-void MDBX_Cursor::Reset(const Napi::CallbackInfo &info) {
+void MDBX_Native_Cursor::Reset(const Napi::CallbackInfo &info) {
 	int rc = mdbx_cursor_reset(this->cursor);
 	if (rc) {
 		Utils::throwMdbxError(info.Env(), rc);
 	}
 }
 
-void MDBX_Cursor::Bind(const Napi::CallbackInfo &info) {
+void MDBX_Native_Cursor::Bind(const Napi::CallbackInfo &info) {
 	Napi::Env env = info.Env();
-
-	if (this->closeTxn) {
-		Napi::Error::New(env, "Cannot bind cursor without provided txn").ThrowAsJavaScriptException();
-		return;
-	}
 
 	if (info[0].IsObject()) {
 		try {
@@ -435,7 +420,7 @@ void MDBX_Cursor::Bind(const Napi::CallbackInfo &info) {
 	int rc;
 	MDBX_cursor_op op;
 
-	rc = mdbx_cursor_bind(this->txn, this->cursor, *this->dbi);
+	rc = mdbx_cursor_bind(this->txn, this->cursor, this->dbi);
 	if (rc) {
 		Utils::throwMdbxError(env, rc);
 		return;
@@ -460,7 +445,7 @@ void MDBX_Cursor::Bind(const Napi::CallbackInfo &info) {
 	}
 }
 
-void MDBX_Cursor::Close(const Napi::CallbackInfo &info) {
+void MDBX_Native_Cursor::Close(const Napi::CallbackInfo &info) {
 	this->_keyBuffer.clear();
 	this->_dataBuffer.clear();
 
@@ -468,24 +453,14 @@ void MDBX_Cursor::Close(const Napi::CallbackInfo &info) {
 		mdbx_cursor_close(this->cursor);
 		this->cursor = nullptr;
 	}
-
-	if (this->closeTxn && this->txn) {
-		int rc = mdbx_txn_abort(this->txn);
-		if (rc) {
-			Utils::throwMdbxError(info.Env(), rc);
-			return;
-		}
-
-		this->txn = nullptr;
-	}
 }
 
-MDBX_Cursor::~MDBX_Cursor() {
-	if (this->cursor) {
-		mdbx_cursor_close(this->cursor);
+MDBX_Native_Cursor::~MDBX_Native_Cursor() {
+	if (!this->nativeDbiRef_.IsEmpty()) {
+		this->nativeDbiRef_.Unref();
 	}
 
-	if (this->closeTxn && this->txn) {
-		mdbx_txn_abort(this->txn);
+	if (this->cursor) {
+		mdbx_cursor_close(this->cursor);
 	}
 }

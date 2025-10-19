@@ -1,6 +1,6 @@
 #include "errors.h"
 
-void MDBX_Errors::Init(Napi::Env env, Napi::Object exports) {
+void MDBX_Native_Errors::Init(Napi::Env env, Napi::Object exports) {
 	Napi::Object code = Napi::Object::New(env);
 
 	code.Set("MDBX_SUCCESS", static_cast<int>(MDBX_SUCCESS));

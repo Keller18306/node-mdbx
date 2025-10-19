@@ -2,17 +2,17 @@
 
 #include "utils.h"
 
-void MDBX_Txn::Init(Napi::Env env) {
+void MDBX_Native_Txn::Init(Napi::Env env) {
 	Napi::Function func = DefineClass(env, "MDBXTxn",
 		{
-			InstanceMethod("info", &MDBX_Txn::Info),
-			InstanceMethod("commit", &MDBX_Txn::Commit),
-			InstanceMethod("commitWithLatency", &MDBX_Txn::CommitWithLatency),
-			InstanceMethod("abort", &MDBX_Txn::Abort),
-			InstanceMethod("park", &MDBX_Txn::Park),
-			InstanceMethod("unpark", &MDBX_Txn::Unpark),
-			InstanceMethod("reset", &MDBX_Txn::Reset),
-			InstanceMethod("renew", &MDBX_Txn::Renew),
+			InstanceMethod("info", &MDBX_Native_Txn::Info),
+			InstanceMethod("commit", &MDBX_Native_Txn::Commit),
+			InstanceMethod("commitWithLatency", &MDBX_Native_Txn::CommitWithLatency),
+			InstanceMethod("abort", &MDBX_Native_Txn::Abort),
+			InstanceMethod("park", &MDBX_Native_Txn::Park),
+			InstanceMethod("unpark", &MDBX_Native_Txn::Unpark),
+			InstanceMethod("reset", &MDBX_Native_Txn::Reset),
+			InstanceMethod("renew", &MDBX_Native_Txn::Renew),
 		});
 
 	Napi::FunctionReference *constructor = new Napi::FunctionReference();
@@ -21,9 +21,11 @@ void MDBX_Txn::Init(Napi::Env env) {
 
 	EnvInstanceData *instanceData = Utils::envInstanceData(env);
 	instanceData->txn = constructor;
+
+	env.AddCleanupHook([](Napi::FunctionReference *ctor) { delete ctor; }, constructor);
 }
 
-MDBX_Txn::MDBX_Txn(const Napi::CallbackInfo &info) : Napi::ObjectWrap<MDBX_Txn>(info) {
+MDBX_Native_Txn::MDBX_Native_Txn(const Napi::CallbackInfo &info) : Napi::ObjectWrap<MDBX_Native_Txn>(info) {
 	unsigned int envFlags;
 	unsigned int txnFlags = MDBX_TXN_READWRITE;
 	int rc;
@@ -69,7 +71,7 @@ MDBX_Txn::MDBX_Txn(const Napi::CallbackInfo &info) : Napi::ObjectWrap<MDBX_Txn>(
 	}
 }
 
-Napi::Value MDBX_Txn::Info(const Napi::CallbackInfo &info) {
+Napi::Value MDBX_Native_Txn::Info(const Napi::CallbackInfo &info) {
 	Napi::Env env = info.Env();
 
 	MDBX_txn_info txninfo;
@@ -95,7 +97,7 @@ Napi::Value MDBX_Txn::Info(const Napi::CallbackInfo &info) {
 	return obj;
 }
 
-void MDBX_Txn::Commit(const Napi::CallbackInfo &info) {
+void MDBX_Native_Txn::Commit(const Napi::CallbackInfo &info) {
 	int rc = mdbx_txn_commit(this->txn);
 	if (rc) {
 		Utils::throwMdbxError(info.Env(), rc);
@@ -105,7 +107,7 @@ void MDBX_Txn::Commit(const Napi::CallbackInfo &info) {
 	this->txn = nullptr;
 }
 
-Napi::Value MDBX_Txn::CommitWithLatency(const Napi::CallbackInfo &info) {
+Napi::Value MDBX_Native_Txn::CommitWithLatency(const Napi::CallbackInfo &info) {
 	MDBX_commit_latency latency;
 
 	int rc = mdbx_txn_commit_ex(this->txn, &latency);
@@ -119,7 +121,7 @@ Napi::Value MDBX_Txn::CommitWithLatency(const Napi::CallbackInfo &info) {
 	return Utils::mdbxCommitLatencyToJSObject(info.Env(), latency);
 }
 
-void MDBX_Txn::Abort(const Napi::CallbackInfo &info) {
+void MDBX_Native_Txn::Abort(const Napi::CallbackInfo &info) {
 	if (this->txn) {
 		int rc = mdbx_txn_abort(this->txn);
 		if (rc) {
@@ -131,7 +133,7 @@ void MDBX_Txn::Abort(const Napi::CallbackInfo &info) {
 	}
 }
 
-void MDBX_Txn::Park(const Napi::CallbackInfo &info) {
+void MDBX_Native_Txn::Park(const Napi::CallbackInfo &info) {
 	bool autounpark = info[0].ToBoolean().Value();
 
 	int rc = mdbx_txn_park(this->txn, autounpark);
@@ -140,7 +142,7 @@ void MDBX_Txn::Park(const Napi::CallbackInfo &info) {
 	}
 }
 
-void MDBX_Txn::Unpark(const Napi::CallbackInfo &info) {
+void MDBX_Native_Txn::Unpark(const Napi::CallbackInfo &info) {
 	bool restart_if_ousted = info[0].ToBoolean().Value();
 
 	int rc = mdbx_txn_unpark(this->txn, restart_if_ousted);
@@ -149,21 +151,21 @@ void MDBX_Txn::Unpark(const Napi::CallbackInfo &info) {
 	}
 }
 
-void MDBX_Txn::Reset(const Napi::CallbackInfo &info) {
+void MDBX_Native_Txn::Reset(const Napi::CallbackInfo &info) {
 	int rc = mdbx_txn_reset(this->txn);
 	if (rc) {
 		Utils::throwMdbxError(info.Env(), rc);
 	}
 }
 
-void MDBX_Txn::Renew(const Napi::CallbackInfo &info) {
+void MDBX_Native_Txn::Renew(const Napi::CallbackInfo &info) {
 	int rc = mdbx_txn_renew(this->txn);
 	if (rc) {
 		Utils::throwMdbxError(info.Env(), rc);
 	}
 }
 
-MDBX_Txn::~MDBX_Txn() {
+MDBX_Native_Txn::~MDBX_Native_Txn() {
 	if (this->txn) {
 		mdbx_txn_abort(this->txn);
 	}

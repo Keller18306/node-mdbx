@@ -1,6 +1,6 @@
 #include "options.h"
 
-void MDBX_Options::Init(Napi::Env env, Napi::Object exports) {
+void MDBX_Native_Options::Init(Napi::Env env, Napi::Object exports) {
 	Napi::Object opt = Napi::Object::New(env);
 
 	opt.Set("max_db", static_cast<int>(MDBX_opt_max_db));

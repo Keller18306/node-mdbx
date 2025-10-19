@@ -2,8 +2,6 @@ import '../index';
 
 declare module '../index' {
     interface DbiOptions {
-        txn?: Txn;
-
         reverseKey?: boolean;
         dupSort?: boolean;
         integerKey?: boolean;

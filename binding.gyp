@@ -10,7 +10,8 @@
         'MDBX_BUILD_FLAGS_CONFIG="Removed by GYP"', # Disable MDBX warning: Build flags undefined. Please use correct build script
         'NDEBUG', # disable assertions
         'MDBX_ENABLE_PROFGC',
-        # 'MDBX_DEBUG=1'
+        # 'MDBX_DEBUG=1',
+        # 'MDBX_FORCE_ASSERTIONS=1',
       ]
     },
     {

@@ -6,12 +6,12 @@
 #include "txn.h"
 #include "utils.h"
 
-std::mutex MDBX_Env::mutex;
-std::map<std::string, std::shared_ptr<MDBX_env>> MDBX_Env::envMap;
+std::mutex MDBX_Native_Env::mutex;
+std::map<std::string, std::shared_ptr<MDBX_env>> MDBX_Native_Env::envMap;
 
-std::shared_ptr<MDBX_env> MDBX_Env::createSharedEnv(const std::string &path, std::function<void(MDBX_env *)> configure) {
-	std::lock_guard<std::mutex> lock(MDBX_Env::mutex);
-	auto &map = MDBX_Env::envMap;
+std::shared_ptr<MDBX_env> MDBX_Native_Env::createSharedEnv(const std::string &path, std::function<void(MDBX_env *)> configure) {
+	std::lock_guard<std::mutex> lock(MDBX_Native_Env::mutex);
+	auto &map = MDBX_Native_Env::envMap;
 
 	if (map.find(path) != map.end()) {
 		return map[path];
@@ -37,35 +37,35 @@ std::shared_ptr<MDBX_env> MDBX_Env::createSharedEnv(const std::string &path, std
 	return sharedEnv;
 }
 
-void MDBX_Env::deleteSharedEnv(const std::string &path) {
-	std::lock_guard<std::mutex> lock(MDBX_Env::mutex);
-	auto &map = MDBX_Env::envMap;
+void MDBX_Native_Env::deleteSharedEnv(const std::string &path) {
+	std::lock_guard<std::mutex> lock(MDBX_Native_Env::mutex);
+	auto &map = MDBX_Native_Env::envMap;
 	auto it = map.find(path);
 	if (it != map.end()) {
 		map.erase(it);
 	}
 }
 
-void MDBX_Env::Init(Napi::Env env, Napi::Object exports) {
+void MDBX_Native_Env::Init(Napi::Env env, Napi::Object exports) {
 	Napi::Function func = DefineClass(env, "MDBXEnv",
 		{
-			InstanceMethod("info", &MDBX_Env::Info),
-			InstanceMethod("stat", &MDBX_Env::Stat),
-			InstanceMethod("getDbi", &MDBX_Env::GetDbi),
-			InstanceMethod("getTxn", &MDBX_Env::GetTxn),
-			InstanceMethod("gcInfo", &MDBX_Env::GcInfo),
-			InstanceMethod("readers", &MDBX_Env::Readers),
-			InstanceMethod("getOption", &MDBX_Env::GetOption),
-			InstanceMethod("setOption", &MDBX_Env::SetOption),
-			InstanceMethod("sync", &MDBX_Env::Sync),
-			InstanceMethod("copy", &MDBX_Env::Copy),
-			InstanceMethod("close", &MDBX_Env::Close),
+			InstanceMethod("info", &MDBX_Native_Env::Info),
+			InstanceMethod("stat", &MDBX_Native_Env::Stat),
+			InstanceMethod("getDbi", &MDBX_Native_Env::GetDbi),
+			InstanceMethod("getTxn", &MDBX_Native_Env::GetTxn),
+			InstanceMethod("gcInfo", &MDBX_Native_Env::GcInfo),
+			InstanceMethod("readers", &MDBX_Native_Env::Readers),
+			InstanceMethod("getOption", &MDBX_Native_Env::GetOption),
+			InstanceMethod("setOption", &MDBX_Native_Env::SetOption),
+			InstanceMethod("sync", &MDBX_Native_Env::Sync),
+			InstanceMethod("copy", &MDBX_Native_Env::Copy),
+			InstanceMethod("close", &MDBX_Native_Env::Close),
 		});
 
 	exports.Set("Env", func);
 }
 
-MDBX_Env::MDBX_Env(const Napi::CallbackInfo &info) : Napi::ObjectWrap<MDBX_Env>(info) {
+MDBX_Native_Env::MDBX_Native_Env(const Napi::CallbackInfo &info) : Napi::ObjectWrap<MDBX_Native_Env>(info) {
 	Napi::Object options = info[0].ToObject();
 
 	if (options.Get("path").IsString()) {
@@ -75,7 +75,7 @@ MDBX_Env::MDBX_Env(const Napi::CallbackInfo &info) : Napi::ObjectWrap<MDBX_Env>(
 		return;
 	}
 
-	this->env = MDBX_Env::createSharedEnv(this->path, [&](MDBX_env *env) {
+	this->env = MDBX_Native_Env::createSharedEnv(this->path, [&](MDBX_env *env) {
 		int rc = MDBX_SUCCESS;
 		unsigned int flags = MDBX_ENV_DEFAULTS;
 		mdbx_mode_t mode = 644;
@@ -179,7 +179,7 @@ MDBX_Env::MDBX_Env(const Napi::CallbackInfo &info) : Napi::ObjectWrap<MDBX_Env>(
 	});
 }
 
-Napi::Value MDBX_Env::Info(const Napi::CallbackInfo &info) {
+Napi::Value MDBX_Native_Env::Info(const Napi::CallbackInfo &info) {
 	Napi::Env env = info.Env();
 	MDBX_envinfo envinfo;
 
@@ -269,7 +269,7 @@ Napi::Value MDBX_Env::Info(const Napi::CallbackInfo &info) {
 	return obj;
 }
 
-Napi::Value MDBX_Env::Stat(const Napi::CallbackInfo &info) {
+Napi::Value MDBX_Native_Env::Stat(const Napi::CallbackInfo &info) {
 	MDBX_stat stat;
 
 	int rc = mdbx_env_stat_ex(this->env.get(), nullptr, &stat, sizeof(stat));
@@ -282,11 +282,12 @@ Napi::Value MDBX_Env::Stat(const Napi::CallbackInfo &info) {
 	return Utils::mdbxStatToJsObject(info.Env(), stat);
 }
 
-Napi::Value MDBX_Env::GetDbi(const Napi::CallbackInfo &info) {
+Napi::Value MDBX_Native_Env::GetDbi(const Napi::CallbackInfo &info) {
 	Napi::Env env = info.Env();
 	EnvInstanceData *instanceData = Utils::envInstanceData(env);
 
-	Napi::Value name = info[0];
+	Napi::Value nativeTxn = info[0];
+	Napi::Value name = info[1];
 
 	if (name.IsUndefined()) {
 		Napi::TypeError::New(env, "Expected the first argument").ThrowAsJavaScriptException();
@@ -296,14 +297,19 @@ Napi::Value MDBX_Env::GetDbi(const Napi::CallbackInfo &info) {
 	Napi::External<MDBX_env> externalEnv = Napi::External<MDBX_env>::New(env, this->env.get());
 
 	Napi::Object options = Napi::Object::New(env);
-	if (info[1].IsObject()) {
-		options = info[1].ToObject();
+	if (info[2].IsObject()) {
+		options = info[2].ToObject();
 	}
 
-	return instanceData->dbi->New({externalEnv, name, options});
+	try {
+		return instanceData->dbi->New({nativeTxn, externalEnv, name, options});
+	} catch (const Napi::Error &e) {
+		e.ThrowAsJavaScriptException();
+		return env.Undefined();
+	}
 }
 
-Napi::Value MDBX_Env::GetTxn(const Napi::CallbackInfo &info) {
+Napi::Value MDBX_Native_Env::GetTxn(const Napi::CallbackInfo &info) {
 	Napi::Env env = info.Env();
 	EnvInstanceData *instanceData = Utils::envInstanceData(env);
 
@@ -317,7 +323,7 @@ Napi::Value MDBX_Env::GetTxn(const Napi::CallbackInfo &info) {
 	return instanceData->txn->New({externalEnv, options});
 }
 
-Napi::Value MDBX_Env::GcInfo(const Napi::CallbackInfo &info) {
+Napi::Value MDBX_Native_Env::GcInfo(const Napi::CallbackInfo &info) {
 	Napi::Env env = info.Env();
 
 	int rc;
@@ -375,7 +381,7 @@ Napi::Value MDBX_Env::GcInfo(const Napi::CallbackInfo &info) {
 	return obj;
 }
 
-Napi::Value MDBX_Env::Readers(const Napi::CallbackInfo &info) {
+Napi::Value MDBX_Native_Env::Readers(const Napi::CallbackInfo &info) {
 	Napi::Env env = info.Env();
 
 	Napi::Array array = Napi::Array::New(env);
@@ -415,7 +421,7 @@ Napi::Value MDBX_Env::Readers(const Napi::CallbackInfo &info) {
 	return array;
 }
 
-Napi::Value MDBX_Env::GetOption(const Napi::CallbackInfo &info) {
+Napi::Value MDBX_Native_Env::GetOption(const Napi::CallbackInfo &info) {
 	unsigned int option = info[0].As<Napi::Number>().Uint32Value();
 	uint64_t value;
 
@@ -428,7 +434,7 @@ Napi::Value MDBX_Env::GetOption(const Napi::CallbackInfo &info) {
 	return Napi::BigInt::New(info.Env(), value);
 }
 
-void MDBX_Env::SetOption(const Napi::CallbackInfo &info) {
+void MDBX_Native_Env::SetOption(const Napi::CallbackInfo &info) {
 	unsigned int option = info[0].As<Napi::Number>().Uint32Value();
 	uint64_t value;
 
@@ -451,7 +457,7 @@ void MDBX_Env::SetOption(const Napi::CallbackInfo &info) {
 	}
 }
 
-Napi::Value MDBX_Env::Sync(const Napi::CallbackInfo &info) {
+Napi::Value MDBX_Native_Env::Sync(const Napi::CallbackInfo &info) {
 	bool force = true;
 	bool nonblock = false;
 
@@ -475,7 +481,7 @@ Napi::Value MDBX_Env::Sync(const Napi::CallbackInfo &info) {
 	return Napi::Boolean::New(info.Env(), rc == MDBX_SUCCESS);
 }
 
-void MDBX_Env::Copy(const Napi::CallbackInfo &info) {
+void MDBX_Native_Env::Copy(const Napi::CallbackInfo &info) {
 	std::string dest = info[0].ToString();
 
 	int flags = MDBX_CP_DEFAULTS;
@@ -495,20 +501,20 @@ void MDBX_Env::Copy(const Napi::CallbackInfo &info) {
 	}
 }
 
-void MDBX_Env::Close(const Napi::CallbackInfo &info) {
+void MDBX_Native_Env::Close(const Napi::CallbackInfo &info) {
 	int rc = mdbx_env_close(this->env.get());
 	if (rc) {
 		Utils::throwMdbxError(info.Env(), rc);
 		return;
 	}
 
-	MDBX_Env::deleteSharedEnv(this->path);
+	MDBX_Native_Env::deleteSharedEnv(this->path);
 }
 
-MDBX_Env::~MDBX_Env() {
+MDBX_Native_Env::~MDBX_Native_Env() {
 	// 1 + 1 = 2 [map ptr + this class instance ptr]
 	if (this->env.use_count() <= 2) {
 		mdbx_env_close(this->env.get());
-		MDBX_Env::deleteSharedEnv(this->path);
+		MDBX_Native_Env::deleteSharedEnv(this->path);
 	}
 }

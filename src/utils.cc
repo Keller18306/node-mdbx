@@ -247,17 +247,12 @@ void Utils::stringToLower(std::string &str) {
 }
 
 MDBX_txn *Utils::argToMdbxTxn(Napi::Env env, Napi::Value arg) {
+	_assertMdbxNativeTxn(env, arg);
+
 	Napi::Object txnObj = arg.ToObject();
-	EnvInstanceData *instanceData = Utils::envInstanceData(env);
+	MDBX_Native_Txn *txnClass = Napi::ObjectWrap<MDBX_Native_Txn>::Unwrap(txnObj);
 
-	if (txnObj.InstanceOf(instanceData->txn->Value())) {
-		MDBX_Txn *txnClass = Napi::ObjectWrap<MDBX_Txn>::Unwrap(txnObj);
-
-		return txnClass->txn;
-	} else {
-		throw Napi::TypeError::New(env, "Invalid Txn: not an instance of Txn");
-		// .ThrowAsJavaScriptException();
-	}
+	return txnClass->txn;
 }
 
 EnvInstanceData *Utils::envInstanceData(Napi::Env env) {
@@ -269,4 +264,17 @@ EnvInstanceData *Utils::envInstanceData(Napi::Env env) {
 	}
 
 	return instanceData;
+}
+
+void Utils::_assertMdbxNativeTxn(Napi::Env env, Napi::Value value) {
+	if (!value.IsObject()) {
+		throw Napi::TypeError::New(env, "Invalid Txn: provided value is not a object");
+	}
+
+	Napi::Object txnObj = value.ToObject();
+	EnvInstanceData *instanceData = Utils::envInstanceData(env);
+
+	if (!txnObj.InstanceOf(instanceData->txn->Value())) {
+		throw Napi::TypeError::New(env, "Invalid Txn: provided value is not an instance of Txn");
+	}
 }

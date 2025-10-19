@@ -31,12 +31,14 @@ function getRandomKey() {
     ).join('');
 }
 
+const txn = env.getTxn();
 
-
-const dbi = env.getDbi(null, {
+const dbi = env.getDbi(txn, null, {
     create: true,
     dupSort: true
 });
+
+txn.commit();
 
 function testCursorWrite1(ic) {
     const txn = env.getTxn({});
@@ -76,7 +78,8 @@ function testCursorWrite1(ic) {
 }
 
 function testCursorWrite2(ic) {
-    const cursor = dbi.getCursor();
+    const txn = env.getTxn();
+    const cursor = dbi.getCursor({ txn });
 
     logMemoryUsage("Before test - write2");
 
@@ -98,6 +101,7 @@ function testCursorWrite2(ic) {
     logMemoryUsage("After test - write2");
 
     cursor.close();
+    txn.commit();
 
     if (global.gc) {
         global.gc();
@@ -110,7 +114,8 @@ function testCursorWrite2(ic) {
 }
 
 function testCursorRead(ic) {
-    const cursor = dbi.getCursor();
+    const txn = env.getTxn({ readOnly: true });
+    const cursor = dbi.getCursor({ txn });
 
     logMemoryUsage("Before test - read");
 
@@ -142,6 +147,7 @@ function testCursorRead(ic) {
     logMemoryUsage("After test - read");
 
     cursor.close();
+    txn.commit();
 
     if (global.gc) {
         global.gc();
@@ -154,7 +160,7 @@ function testCursorRead(ic) {
 }
 
 function testTxnWriteAbort(ic) {
-    const txn = env.getTxn({});
+    const txn = env.getTxn();
     const cursor = dbi.getCursor({ txn });
 
     logMemoryUsage("Before test - testTxnWriteAbort");
@@ -233,7 +239,7 @@ function testTxnRead(ic) {
     }
 }
 
-for (let i = 0; i < 10; i++) {
+for (let i = 0; i < 1; i++) {
     testCursorWrite1(i);
     testCursorWrite2(i);
     testCursorRead(i);

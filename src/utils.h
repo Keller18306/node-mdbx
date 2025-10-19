@@ -34,4 +34,5 @@ class Utils {
 	static void stringToLower(std::string &str);
 	static MDBX_txn *argToMdbxTxn(Napi::Env env, Napi::Value arg);
 	static EnvInstanceData *envInstanceData(Napi::Env env);
+	static void _assertMdbxNativeTxn(Napi::Env env, Napi::Value value);
 };

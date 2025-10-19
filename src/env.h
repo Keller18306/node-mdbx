@@ -4,7 +4,7 @@
 #include <napi.h>
 #include <string>
 
-class MDBX_Env : public Napi::ObjectWrap<MDBX_Env> {
+class MDBX_Native_Env : public Napi::ObjectWrap<MDBX_Native_Env> {
   private:
 	static std::map<std::string, std::shared_ptr<MDBX_env>> envMap;
 	static std::mutex mutex;
@@ -31,6 +31,6 @@ class MDBX_Env : public Napi::ObjectWrap<MDBX_Env> {
 
   public:
 	static void Init(Napi::Env env, Napi::Object exports);
-	MDBX_Env(const Napi::CallbackInfo &info);
-	~MDBX_Env();
+	MDBX_Native_Env(const Napi::CallbackInfo &info);
+	~MDBX_Native_Env();
 };

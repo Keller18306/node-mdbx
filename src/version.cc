@@ -45,7 +45,7 @@ Napi::String GetVersionString(const Napi::Env &env) {
 	return Napi::String::New(env, versionStream.str());
 }
 
-void MDBX_Version::Init(Napi::Env env, Napi::Object exports) {
+void MDBX_Native_Version::Init(Napi::Env env, Napi::Object exports) {
 	exports.Set("VERSION_STRING", GetVersionString(env));
 	exports.Set("version", ConvertMDBXVersionToJS(env));
 	exports.Set("build", ConvertMDBXBuildToJS(env));

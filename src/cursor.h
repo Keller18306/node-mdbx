@@ -4,12 +4,12 @@
 
 #include "utils.h"
 
-class MDBX_Cursor : public Napi::ObjectWrap<MDBX_Cursor> {
+class MDBX_Native_Cursor : public Napi::ObjectWrap<MDBX_Native_Cursor> {
   private:
-	MDBX_env *env = nullptr;
+	Napi::ObjectReference nativeDbiRef_;
+
 	MDBX_txn *txn = nullptr;
-	bool closeTxn = false;
-	MDBX_dbi *dbi = nullptr;
+	MDBX_dbi dbi;
 	MDBX_cursor *cursor = nullptr;
 	unsigned int dbiFlags;
 
@@ -42,7 +42,7 @@ class MDBX_Cursor : public Napi::ObjectWrap<MDBX_Cursor> {
 	Napi::Value Set(const Napi::CallbackInfo &info);
 	Napi::Value Range(const Napi::CallbackInfo &info);
 	Napi::Value Pos(const Napi::CallbackInfo &info);
-	
+
 	void Put(const Napi::CallbackInfo &info);
 	void Del(const Napi::CallbackInfo &info);
 
@@ -55,6 +55,6 @@ class MDBX_Cursor : public Napi::ObjectWrap<MDBX_Cursor> {
 
   public:
 	static void Init(Napi::Env env);
-	MDBX_Cursor(const Napi::CallbackInfo &info);
-	~MDBX_Cursor();
+	MDBX_Native_Cursor(const Napi::CallbackInfo &info);
+	~MDBX_Native_Cursor();
 };

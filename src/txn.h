@@ -1,9 +1,8 @@
 #include <mdbx.h>
 #include <napi.h>
 
-class MDBX_Txn : public Napi::ObjectWrap<MDBX_Txn> {
+class MDBX_Native_Txn : public Napi::ObjectWrap<MDBX_Native_Txn> {
   private:
-
 	Napi::Value Info(const Napi::CallbackInfo &info);
 	Napi::Value CommitWithLatency(const Napi::CallbackInfo &info);
 	void Commit(const Napi::CallbackInfo &info);
@@ -17,6 +16,6 @@ class MDBX_Txn : public Napi::ObjectWrap<MDBX_Txn> {
 	MDBX_txn *txn = nullptr;
 
 	static void Init(Napi::Env env);
-	MDBX_Txn(const Napi::CallbackInfo &info);
-	~MDBX_Txn();
+	MDBX_Native_Txn(const Napi::CallbackInfo &info);
+	~MDBX_Native_Txn();
 };

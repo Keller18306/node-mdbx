@@ -6,7 +6,7 @@ declare module '../index' {
 
         public info(): Info;
         public stat(): Stat;
-        public getDbi(name: CursorValue | null, options?: DbiOptions): Dbi;
+        public getDbi(txn: Txn, name: CursorValue | null, options?: DbiOptions): Dbi;
         public getTxn(options?: TxnOptions): Txn;
         public gcInfo(txn: Txn): GcInfo;
         public readers(): ReaderInfo[];

@@ -98,6 +98,7 @@ Napi::Value MDBX_Native_Txn::Info(const Napi::CallbackInfo &info) {
 	obj.Set("space_retired", txninfo.txn_space_retired);
 	obj.Set("space_leftover", txninfo.txn_space_leftover);
 	obj.Set("space_dirty", txninfo.txn_space_dirty);
+	obj.Set("pages_read", txninfo.txn_pages_read);
 
 	return obj;
 }

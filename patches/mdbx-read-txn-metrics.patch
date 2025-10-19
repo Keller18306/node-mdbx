@@ -1,0 +1,42 @@
+diff --git a/dist/mdbx.c b/dist/mdbx.c
+index 4d0bdef..5a6075a 100644
+--- a/dist/mdbx.c
++++ b/dist/mdbx.c
+@@ -4258,6 +4258,8 @@ struct MDBX_txn {
+   /* "Канареечные" маркеры/счетчики */
+   MDBX_canary canary;
+ 
++  uint32_t pages_read;
++
+   /* User-settable context */
+   void *userctx;
+ 
+@@ -13712,6 +13714,7 @@ int mdbx_txn_info(const MDBX_txn *txn, MDBX_txn_info *info, bool scan_rlt) {
+ 
+   info->txn_id = txn->txnid;
+   info->txn_space_used = pgno2bytes(env, txn->geo.first_unallocated);
++  info->txn_pages_read = txn->pages_read;
+ 
+   if (txn->flags & MDBX_TXN_RDONLY) {
+     meta_ptr_t head;
+@@ -31812,6 +31815,7 @@ static __always_inline pgr_t page_get_inline(const uint16_t ILL, const MDBX_curs
+   if (unlikely(r.err != MDBX_SUCCESS))
+     goto bailout;
+ #endif /* MDBX_DISABLE_VALIDATION */
++  ((MDBX_txn *)txn)->pages_read += 1;
+   return r;
+ }
+ 
+diff --git a/dist/mdbx.h b/dist/mdbx.h
+index f515eae..574135c 100644
+--- a/dist/mdbx.h
++++ b/dist/mdbx.h
+@@ -4012,6 +4012,8 @@ struct MDBX_txn_info {
+      For WRITE transaction: The summarized size of the dirty database
+      pages that generated during this transaction. */
+   uint64_t txn_space_dirty;
++
++  uint32_t txn_pages_read;
+ };
+ #ifndef __cplusplus
+ /** \ingroup c_statinfo */

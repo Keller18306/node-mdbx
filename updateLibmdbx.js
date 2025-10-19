@@ -14,6 +14,9 @@ mkdirSync(cwd);
 execSync("git clone --branch stable https://gitflic.ru/project/erthink/libmdbx.git .", { cwd, stdio: 'inherit' });
 execSync("make dist", { cwd, stdio: 'inherit' });
 
+console.log('Applying patches... (mdbx-read-txn-metrics.patch)')
+execSync("git apply ../patches/mdbx-read-txn-metrics.patch", { cwd, stdio: 'inherit' });
+
 if (existsSync(out)) {
     rmSync(out, { recursive: true });
     mkdirSync(out);

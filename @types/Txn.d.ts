@@ -73,7 +73,7 @@ declare module '../index' {
     }
 
     interface Txn {
-        info(): TxnInfo;
+        info(scanRlt?: boolean): TxnInfo;
         commit(): void;
         commitWithLatency(): CommitLatency;
         abort(): void;

@@ -75,8 +75,13 @@ Napi::Value MDBX_Native_Txn::Info(const Napi::CallbackInfo &info) {
 	Napi::Env env = info.Env();
 
 	MDBX_txn_info txninfo;
+	bool scan_rlt = false;
 
-	int rc = mdbx_txn_info(this->txn, &txninfo, false);
+	if (info[0].IsBoolean()) {
+		scan_rlt = info[0].ToBoolean().Value();
+	}
+
+	int rc = mdbx_txn_info(this->txn, &txninfo, scan_rlt);
 	if (rc) {
 		Utils::throwMdbxError(env, rc);
 

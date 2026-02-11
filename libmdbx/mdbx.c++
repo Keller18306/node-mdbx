@@ -1,10 +1,8 @@
 /// \copyright SPDX-License-Identifier: Apache-2.0
-/// \author Леонид Юрьев aka Leonid Yuriev <leo@yuriev.ru> \date 2015-2025
+/// \author Леонид Юрьев aka Leonid Yuriev <leo@yuriev.ru> \date 2015-2026
 /* clang-format off */
 
-
-#define MDBX_BUILD_SOURCERY f230a1a2e673a96c0808abf65294e1c2574dde9a44fb0a7f6eb91d3ef5033862_v0_13_8_12_g7a6a4eae
-
+#define MDBX_BUILD_SOURCERY bdee29627d22869c26aa5f0bd1cbf72ec0231c912eec531514f2f12f3a5f899d_v0_13_11_2_gea86a7d3
 
 #define LIBMDBX_INTERNALS
 #define MDBX_DEPRECATED
@@ -12,8 +10,6 @@
 #ifdef MDBX_CONFIG_H
 #include MDBX_CONFIG_H
 #endif
-
-
 
 /* Undefine the NDEBUG if debugging is enforced by MDBX_DEBUG */
 #if (defined(MDBX_DEBUG) && MDBX_DEBUG > 0) || (defined(MDBX_FORCE_ASSERTIONS) && MDBX_FORCE_ASSERTIONS)
@@ -164,7 +160,6 @@
 #if defined(__GNUC__) && __GNUC__ < 9
 #pragma GCC diagnostic ignored "-Wattributes"
 #endif /* GCC < 9 */
-
 
 /*----------------------------------------------------------------------------*/
 /* Microsoft compiler generates a lot of warning for self includes... */
@@ -1016,8 +1011,6 @@ template <typename T, size_t N> char (&__ArraySizeHelper(T (&array)[N]))[N];
 typedef struct iov_ctx iov_ctx_t;
 ///
 
-
-
 /*----------------------------------------------------------------------------*/
 /* Memory/Compiler barriers, cache coherence */
 
@@ -1178,7 +1171,7 @@ typedef char pathchar_t;
 #define MDBX_PRIsPATH "s"
 #endif
 
-static inline bool osal_yield(void) {
+MDBX_MAYBE_UNUSED static inline bool osal_yield(void) {
 #if defined(_WIN32) || defined(_WIN64)
   return SleepEx(0, true) == WAIT_IO_COMPLETION;
 #else
@@ -1204,6 +1197,8 @@ typedef struct osal_mmap {
 #if defined(_WIN32) || defined(_WIN64)
 
 #define MDBX_HAVE_PWRITEV 0
+
+MDBX_INTERNAL int osal_waitstatus2errcode(DWORD result);
 
 #elif defined(__ANDROID_API__)
 
@@ -1601,7 +1596,6 @@ MDBX_MAYBE_UNUSED MDBX_NOTHROW_PURE_FUNCTION static inline uint32_t osal_bswap32
 #endif
 }
 
-
 /*******************************************************************************
  *******************************************************************************
  *
@@ -1616,8 +1610,6 @@ MDBX_MAYBE_UNUSED MDBX_NOTHROW_PURE_FUNCTION static inline uint32_t osal_bswap32
  *
  *
  */
-
-
 
 /** \defgroup build_option Build options
  * The libmdbx build options.
@@ -1894,7 +1886,8 @@ MDBX_MAYBE_UNUSED MDBX_NOTHROW_PURE_FUNCTION static inline uint32_t osal_bswap32
     ((defined(_POSIX_THREAD_ROBUST_PRIO_INHERIT) && _POSIX_THREAD_ROBUST_PRIO_INHERIT > 0) ||                          \
      (defined(_POSIX_THREAD_ROBUST_PRIO_PROTECT) && _POSIX_THREAD_ROBUST_PRIO_PROTECT > 0) ||                          \
      defined(PTHREAD_MUTEX_ROBUST) || defined(PTHREAD_MUTEX_ROBUST_NP)) &&                                             \
-    (!defined(__GLIBC__) || __GLIBC_PREREQ(2, 10) /* troubles with Robust mutexes before 2.10 */)
+    (!defined(__GLIBC__) || __GLIBC_PREREQ(2, 10) /* troubles with Robust mutexes before 2.10 */) &&                   \
+    !defined(__OHOS__) /* Harmony OS doesn't support robust mutexes at the end of 2025 */
 #define MDBX_LOCKING MDBX_LOCKING_POSIX2008
 #else
 #define MDBX_LOCKING MDBX_LOCKING_POSIX2001
@@ -1949,7 +1942,7 @@ MDBX_MAYBE_UNUSED MDBX_NOTHROW_PURE_FUNCTION static inline uint32_t osal_bswap32
 #error MDBX_USE_COPYFILERANGE must be defined as 0 or 1
 #endif /* MDBX_USE_COPYFILERANGE */
 
-/** Advanced: Using posix_fallocate() or fcntl(F_PREALLOCATE) (autodetection by default). */
+/** Advanced: Using posix_fallocate() or fcntl(F_PREALLOCATE) on OSX (autodetection by default). */
 #ifndef MDBX_USE_FALLOCATE
 #if defined(__APPLE__)
 #define MDBX_USE_FALLOCATE 0 /* Too slow and unclean, but not required to prevent SIGBUS */
@@ -1958,8 +1951,11 @@ MDBX_MAYBE_UNUSED MDBX_NOTHROW_PURE_FUNCTION static inline uint32_t osal_bswap32
 #else
 #define MDBX_USE_FALLOCATE 0
 #endif
+#define MDBX_USE_FALLOCATE_CONFIG "AUTO=" MDBX_STRINGIFY(MDBX_USE_FALLOCATE)
 #elif !(MDBX_USE_FALLOCATE == 0 || MDBX_USE_FALLOCATE == 1)
 #error MDBX_USE_FALLOCATE must be defined as 0 or 1
+#else
+#define MDBX_USE_FALLOCATE_CONFIG MDBX_STRINGIFY(MDBX_USE_FALLOCATE)
 #endif /* MDBX_USE_FALLOCATE */
 
 //------------------------------------------------------------------------------
@@ -2145,9 +2141,6 @@ MDBX_MAYBE_UNUSED MDBX_NOTHROW_PURE_FUNCTION static inline uint32_t osal_bswap32
 
 #endif /* DOXYGEN */
 
-
-
-
 #ifndef MDBX_64BIT_ATOMIC
 #error "The MDBX_64BIT_ATOMIC must be defined before"
 #endif /* MDBX_64BIT_ATOMIC */
@@ -2238,9 +2231,6 @@ typedef union {
 #endif /* MDBX_HAVE_C11ATOMICS */
 
 #define SAFE64_INVALID_THRESHOLD UINT64_C(0xffffFFFF00000000)
-
-
-
 
 #pragma pack(push, 4)
 
@@ -2521,8 +2511,6 @@ MDBX_MAYBE_UNUSED MDBX_NOTHROW_PURE_FUNCTION static inline bool is_largepage(con
 MDBX_MAYBE_UNUSED MDBX_NOTHROW_PURE_FUNCTION static inline bool is_subpage(const page_t *mp) {
   return (mp->flags & P_SUBP) != 0;
 }
-
-
 
 /* The version number for a database's lockfile format. */
 #define MDBX_LOCK_VERSION 6
@@ -2859,9 +2847,6 @@ extern struct libmdbx_globals globals;
 extern struct libmdbx_imports imports;
 #endif /* Windows */
 
-
-
-
 #ifndef __Wpedantic_format_voidptr
 MDBX_MAYBE_UNUSED static inline const void *__Wpedantic_format_voidptr(const void *ptr) { return ptr; }
 #define __Wpedantic_format_voidptr(ARG) __Wpedantic_format_voidptr(ARG)
@@ -3015,8 +3000,6 @@ MDBX_MAYBE_UNUSED static inline int log_if_error(const int err, const char *func
 
 #define LOG_IFERR(err) log_if_error((err), __func__, __LINE__)
 
-
-
 /* Test if the flags f are set in a flag word w. */
 #define F_ISSET(w, f) (((w) & (f)) == (f))
 
@@ -3088,9 +3071,6 @@ MDBX_MAYBE_UNUSED static inline uint64_t monotime_since_cached(uint64_t begin_ti
   }
   return cache->value - begin_timestamp;
 }
-
-
-
 
 /* An PNL is an Page Number List, a sorted array of IDs.
  *
@@ -3259,11 +3239,10 @@ MDBX_NOTHROW_CONST_FUNCTION MDBX_MAYBE_UNUSED static inline pgno_t pgno_sub(size
   return int64pgno((int64_t)base - (int64_t)subtrahend);
 }
 /// \copyright SPDX-License-Identifier: Apache-2.0
-/// \author Леонид Юрьев aka Leonid Yuriev <leo@yuriev.ru> \date 2020-2025
+/// \author Леонид Юрьев aka Leonid Yuriev <leo@yuriev.ru> \date 2020-2026
 ///
 /// \brief Non-inline part of the libmdbx C++ API
 ///
-
 
 #if !defined(MDBX_BUILD_CXX) || MDBX_BUILD_CXX != 1
 #error "Build is misconfigured! Expecting MDBX_BUILD_CXX=1 for C++ API."
@@ -3278,7 +3257,6 @@ MDBX_NOTHROW_CONST_FUNCTION MDBX_MAYBE_UNUSED static inline pgno_t pgno_sub(size
 #define _SILENCE_EXPERIMENTAL_FILESYSTEM_DEPRECATION_WARNING
 #endif /* #define _SILENCE_EXPERIMENTAL_FILESYSTEM_DEPRECATION_WARNING */
 #endif /* _MSC_VER */
-
 
 #include <array>
 #include <atomic>
@@ -3690,15 +3668,16 @@ __cold void error::throw_exception() const {
 
 bool slice::is_printable(bool disable_utf8) const noexcept {
   enum : byte {
-    LS = 4,                     // shift for UTF8 sequence length
-    P_ = 1 << LS,               // printable ASCII flag
-    N_ = 0,                     // non-printable ASCII
-    second_range_mask = P_ - 1, // mask for range flag
-    r80_BF = 0,                 // flag for UTF8 2nd byte range
-    rA0_BF = 1,                 // flag for UTF8 2nd byte range
-    r80_9F = 2,                 // flag for UTF8 2nd byte range
-    r90_BF = 3,                 // flag for UTF8 2nd byte range
-    r80_8F = 4,                 // flag for UTF8 2nd byte range
+    LS = 4,                // shift for UTF8 sequence length
+    P_ = 1 << LS,          // printable ASCII flag
+    X_ = 1 << (LS - 1),    // printable extended ASCII flag
+    N_ = 0,                // non-printable ASCII
+    r80_BF = 0,            // flag for UTF8 2nd byte range
+    rA0_BF = 1,            // flag for UTF8 2nd byte range
+    r80_9F = 2,            // flag for UTF8 2nd byte range
+    r90_BF = 3,            // flag for UTF8 2nd byte range
+    r80_8F = 4,            // flag for UTF8 2nd byte range
+    second_range_mask = 7, // mask for range flag
 
     // valid utf-8 byte sequences
     // http://www.unicode.org/versions/Unicode6.0.0/ch03.pdf - page 94
@@ -3728,14 +3707,14 @@ bool slice::is_printable(bool disable_utf8) const noexcept {
       P_, P_, P_, P_, P_, P_, P_, P_, P_, P_, P_, P_, P_, P_, P_, P_, // 50
       P_, P_, P_, P_, P_, P_, P_, P_, P_, P_, P_, P_, P_, P_, P_, P_, // 60
       P_, P_, P_, P_, P_, P_, P_, P_, P_, P_, P_, P_, P_, P_, P_, N_, // 70
-      N_, N_, P_, P_, P_, P_, P_, P_, P_, P_, P_, P_, P_, N_, P_, N_, // 80
-      N_, P_, P_, P_, P_, P_, P_, P_, P_, P_, P_, P_, P_, N_, P_, P_, // 90
-      P_, P_, P_, P_, P_, P_, P_, P_, P_, P_, P_, P_, P_, P_, P_, P_, // a0
-      P_, P_, P_, P_, P_, P_, P_, P_, P_, P_, P_, P_, P_, P_, P_, P_, // b0
-      P_, P_, C2, C2, C2, C2, C2, C2, C2, C2, C2, C2, C2, C2, C2, C2, // c0
+      N_, N_, X_, X_, X_, X_, X_, X_, X_, X_, X_, X_, X_, N_, X_, N_, // 80
+      N_, X_, X_, X_, X_, X_, X_, X_, X_, X_, X_, X_, X_, N_, X_, X_, // 90
+      X_, X_, X_, X_, X_, X_, X_, X_, X_, X_, X_, X_, X_, X_, X_, X_, // a0
+      X_, X_, X_, X_, X_, X_, X_, X_, X_, X_, X_, X_, X_, X_, X_, X_, // b0
+      X_, X_, C2, C2, C2, C2, C2, C2, C2, C2, C2, C2, C2, C2, C2, C2, // c0
       C2, C2, C2, C2, C2, C2, C2, C2, C2, C2, C2, C2, C2, C2, C2, C2, // df
       E0, E1, E1, E1, E1, E1, E1, E1, E1, E1, E1, E1, E1, ED, EE, EE, // e0
-      F0, F1, F1, F1, F4, P_, P_, P_, P_, P_, P_, P_, P_, P_, P_, P_  // f0
+      F0, F1, F1, F1, F4, X_, X_, X_, X_, X_, X_, X_, X_, X_, X_, X_  // f0
   };
 
   if (MDBX_UNLIKELY(length() < 1))
@@ -3745,7 +3724,7 @@ bool slice::is_printable(bool disable_utf8) const noexcept {
   const auto end = src + length();
   if (MDBX_UNLIKELY(disable_utf8)) {
     do
-      if (MDBX_UNLIKELY((P_ & map[*src]) == 0))
+      if (MDBX_UNLIKELY(((P_ | X_) & map[*src]) == 0))
         MDBX_CXX20_UNLIKELY return false;
     while (++src < end);
     return true;
@@ -4436,11 +4415,11 @@ bool from_base64::is_erroneous() const noexcept {
 #pragma warning(disable : 4251)
 #endif /* MSVC */
 
-MDBX_INSTALL_API_TEMPLATE(LIBMDBX_API_TYPE, buffer<legacy_allocator>);
+MDBX_INSTALL_API_TEMPLATE(LIBMDBX_API_TYPE, buffer<legacy_allocator, default_capacity_policy>);
 
-#if defined(__cpp_lib_memory_resource) && __cpp_lib_memory_resource >= 201603L && _GLIBCXX_USE_CXX11_ABI
-MDBX_INSTALL_API_TEMPLATE(LIBMDBX_API_TYPE, buffer<polymorphic_allocator>);
-#endif /* __cpp_lib_memory_resource >= 201603L */
+#if MDBX_CXX_HAS_POLYMORPHIC_ALLOCATOR
+MDBX_INSTALL_API_TEMPLATE(LIBMDBX_API_TYPE, buffer<polymorphic_allocator, default_capacity_policy>);
+#endif /* MDBX_CXX_HAS_POLYMORPHIC_ALLOCATOR */
 
 #if defined(_MSC_VER)
 #pragma warning(pop)
@@ -4573,12 +4552,12 @@ __cold env &env::copy(const MDBX_STD_FILESYSTEM_PATH &destination, bool compacti
 
 __cold path env::get_path() const {
 #if defined(_WIN32) || defined(_WIN64)
-  const wchar_t *c_wstr;
+  const wchar_t *c_wstr = nullptr;
   error::success_or_throw(::mdbx_env_get_pathW(handle_, &c_wstr));
   static_assert(sizeof(path::value_type) == sizeof(wchar_t), "Oops");
   return path(c_wstr);
 #else
-  const char *c_str;
+  const char *c_str = nullptr;
   error::success_or_throw(::mdbx_env_get_path(handle_, &c_str));
   static_assert(sizeof(path::value_type) == sizeof(char), "Oops");
   return path(c_str);
@@ -4874,13 +4853,13 @@ __cold ::std::ostream &operator<<(::std::ostream &out, const slice &it) {
   else if (it.empty())
     out << "EMPTY->" << it.data();
   else {
-    const slice root(it.head(std::min(it.length(), size_t(64))));
+    const slice head(it.head(std::min(it.length(), size_t(64))));
     out << it.length() << ".";
-    if (root.is_printable())
-      (out << "\"").write(root.char_ptr(), root.length()) << "\"";
+    if (head.is_printable())
+      (out << "\"").write(head.char_ptr(), head.length()) << "\"";
     else
-      out << root.encode_base58();
-    if (root.length() < it.length())
+      out << to_hex(head);
+    if (head.length() < it.length())
       out << "...";
   }
   return out << "}";

@@ -1,11 +1,10 @@
 /// \copyright SPDX-License-Identifier: Apache-2.0
-/// \author Леонид Юрьев aka Leonid Yuriev <leo@yuriev.ru> \date 2015-2025
+/// \author Леонид Юрьев aka Leonid Yuriev <leo@yuriev.ru> \date 2015-2026
 /* clang-format off */
 
 #define xMDBX_ALLOY 1  /* alloyed build */
 
-#define MDBX_BUILD_SOURCERY f230a1a2e673a96c0808abf65294e1c2574dde9a44fb0a7f6eb91d3ef5033862_v0_13_8_12_g7a6a4eae
-
+#define MDBX_BUILD_SOURCERY bdee29627d22869c26aa5f0bd1cbf72ec0231c912eec531514f2f12f3a5f899d_v0_13_11_2_gea86a7d3
 
 #define LIBMDBX_INTERNALS
 #define MDBX_DEPRECATED
@@ -13,8 +12,6 @@
 #ifdef MDBX_CONFIG_H
 #include MDBX_CONFIG_H
 #endif
-
-
 
 /* Undefine the NDEBUG if debugging is enforced by MDBX_DEBUG */
 #if (defined(MDBX_DEBUG) && MDBX_DEBUG > 0) || (defined(MDBX_FORCE_ASSERTIONS) && MDBX_FORCE_ASSERTIONS)
@@ -165,7 +162,6 @@
 #if defined(__GNUC__) && __GNUC__ < 9
 #pragma GCC diagnostic ignored "-Wattributes"
 #endif /* GCC < 9 */
-
 
 /*----------------------------------------------------------------------------*/
 /* Microsoft compiler generates a lot of warning for self includes... */
@@ -1017,8 +1013,6 @@ template <typename T, size_t N> char (&__ArraySizeHelper(T (&array)[N]))[N];
 typedef struct iov_ctx iov_ctx_t;
 ///
 
-
-
 /*----------------------------------------------------------------------------*/
 /* Memory/Compiler barriers, cache coherence */
 
@@ -1179,7 +1173,7 @@ typedef char pathchar_t;
 #define MDBX_PRIsPATH "s"
 #endif
 
-static inline bool osal_yield(void) {
+MDBX_MAYBE_UNUSED static inline bool osal_yield(void) {
 #if defined(_WIN32) || defined(_WIN64)
   return SleepEx(0, true) == WAIT_IO_COMPLETION;
 #else
@@ -1205,6 +1199,8 @@ typedef struct osal_mmap {
 #if defined(_WIN32) || defined(_WIN64)
 
 #define MDBX_HAVE_PWRITEV 0
+
+MDBX_INTERNAL int osal_waitstatus2errcode(DWORD result);
 
 #elif defined(__ANDROID_API__)
 
@@ -1602,7 +1598,6 @@ MDBX_MAYBE_UNUSED MDBX_NOTHROW_PURE_FUNCTION static inline uint32_t osal_bswap32
 #endif
 }
 
-
 /*******************************************************************************
  *******************************************************************************
  *
@@ -1617,8 +1612,6 @@ MDBX_MAYBE_UNUSED MDBX_NOTHROW_PURE_FUNCTION static inline uint32_t osal_bswap32
  *
  *
  */
-
-
 
 /** \defgroup build_option Build options
  * The libmdbx build options.
@@ -1895,7 +1888,8 @@ MDBX_MAYBE_UNUSED MDBX_NOTHROW_PURE_FUNCTION static inline uint32_t osal_bswap32
     ((defined(_POSIX_THREAD_ROBUST_PRIO_INHERIT) && _POSIX_THREAD_ROBUST_PRIO_INHERIT > 0) ||                          \
      (defined(_POSIX_THREAD_ROBUST_PRIO_PROTECT) && _POSIX_THREAD_ROBUST_PRIO_PROTECT > 0) ||                          \
      defined(PTHREAD_MUTEX_ROBUST) || defined(PTHREAD_MUTEX_ROBUST_NP)) &&                                             \
-    (!defined(__GLIBC__) || __GLIBC_PREREQ(2, 10) /* troubles with Robust mutexes before 2.10 */)
+    (!defined(__GLIBC__) || __GLIBC_PREREQ(2, 10) /* troubles with Robust mutexes before 2.10 */) &&                   \
+    !defined(__OHOS__) /* Harmony OS doesn't support robust mutexes at the end of 2025 */
 #define MDBX_LOCKING MDBX_LOCKING_POSIX2008
 #else
 #define MDBX_LOCKING MDBX_LOCKING_POSIX2001
@@ -1950,7 +1944,7 @@ MDBX_MAYBE_UNUSED MDBX_NOTHROW_PURE_FUNCTION static inline uint32_t osal_bswap32
 #error MDBX_USE_COPYFILERANGE must be defined as 0 or 1
 #endif /* MDBX_USE_COPYFILERANGE */
 
-/** Advanced: Using posix_fallocate() or fcntl(F_PREALLOCATE) (autodetection by default). */
+/** Advanced: Using posix_fallocate() or fcntl(F_PREALLOCATE) on OSX (autodetection by default). */
 #ifndef MDBX_USE_FALLOCATE
 #if defined(__APPLE__)
 #define MDBX_USE_FALLOCATE 0 /* Too slow and unclean, but not required to prevent SIGBUS */
@@ -1959,8 +1953,11 @@ MDBX_MAYBE_UNUSED MDBX_NOTHROW_PURE_FUNCTION static inline uint32_t osal_bswap32
 #else
 #define MDBX_USE_FALLOCATE 0
 #endif
+#define MDBX_USE_FALLOCATE_CONFIG "AUTO=" MDBX_STRINGIFY(MDBX_USE_FALLOCATE)
 #elif !(MDBX_USE_FALLOCATE == 0 || MDBX_USE_FALLOCATE == 1)
 #error MDBX_USE_FALLOCATE must be defined as 0 or 1
+#else
+#define MDBX_USE_FALLOCATE_CONFIG MDBX_STRINGIFY(MDBX_USE_FALLOCATE)
 #endif /* MDBX_USE_FALLOCATE */
 
 //------------------------------------------------------------------------------
@@ -2146,9 +2143,6 @@ MDBX_MAYBE_UNUSED MDBX_NOTHROW_PURE_FUNCTION static inline uint32_t osal_bswap32
 
 #endif /* DOXYGEN */
 
-
-
-
 #ifndef MDBX_64BIT_ATOMIC
 #error "The MDBX_64BIT_ATOMIC must be defined before"
 #endif /* MDBX_64BIT_ATOMIC */
@@ -2239,9 +2233,6 @@ typedef union {
 #endif /* MDBX_HAVE_C11ATOMICS */
 
 #define SAFE64_INVALID_THRESHOLD UINT64_C(0xffffFFFF00000000)
-
-
-
 
 #pragma pack(push, 4)
 
@@ -2522,8 +2513,6 @@ MDBX_MAYBE_UNUSED MDBX_NOTHROW_PURE_FUNCTION static inline bool is_largepage(con
 MDBX_MAYBE_UNUSED MDBX_NOTHROW_PURE_FUNCTION static inline bool is_subpage(const page_t *mp) {
   return (mp->flags & P_SUBP) != 0;
 }
-
-
 
 /* The version number for a database's lockfile format. */
 #define MDBX_LOCK_VERSION 6
@@ -2860,9 +2849,6 @@ extern struct libmdbx_globals globals;
 extern struct libmdbx_imports imports;
 #endif /* Windows */
 
-
-
-
 #ifndef __Wpedantic_format_voidptr
 MDBX_MAYBE_UNUSED static inline const void *__Wpedantic_format_voidptr(const void *ptr) { return ptr; }
 #define __Wpedantic_format_voidptr(ARG) __Wpedantic_format_voidptr(ARG)
@@ -3016,8 +3002,6 @@ MDBX_MAYBE_UNUSED static inline int log_if_error(const int err, const char *func
 
 #define LOG_IFERR(err) log_if_error((err), __func__, __LINE__)
 
-
-
 /* Test if the flags f are set in a flag word w. */
 #define F_ISSET(w, f) (((w) & (f)) == (f))
 
@@ -3089,9 +3073,6 @@ MDBX_MAYBE_UNUSED static inline uint64_t monotime_since_cached(uint64_t begin_ti
   }
   return cache->value - begin_timestamp;
 }
-
-
-
 
 /* An PNL is an Page Number List, a sorted array of IDs.
  *
@@ -3260,9 +3241,7 @@ MDBX_NOTHROW_CONST_FUNCTION MDBX_MAYBE_UNUSED static inline pgno_t pgno_sub(size
   return int64pgno((int64_t)base - (int64_t)subtrahend);
 }
 
-
 /*----------------------------------------------------------------------------*/
-
 
 typedef struct dp dp_t;
 typedef struct dpl dpl_t;
@@ -3298,9 +3277,6 @@ typedef struct bind_reader_slot_result {
   int err;
   reader_slot_t *rslot;
 } bsr_t;
-
-
-
 
 #ifndef __cplusplus
 
@@ -3412,8 +3388,7 @@ MDBX_MAYBE_UNUSED static
 #if MDBX_64BIT_ATOMIC
     __always_inline
 #endif /* MDBX_64BIT_ATOMIC */
-        uint64_t
-        atomic_load64(const volatile mdbx_atomic_uint64_t *p, enum mdbx_memory_order order) {
+        uint64_t atomic_load64(const volatile mdbx_atomic_uint64_t *p, enum mdbx_memory_order order) {
   STATIC_ASSERT(sizeof(mdbx_atomic_uint64_t) == 8);
 #if MDBX_64BIT_ATOMIC
 #ifdef MDBX_HAVE_C11ATOMICS
@@ -3650,15 +3625,12 @@ MDBX_MAYBE_UNUSED static
 #if MDBX_64BIT_ATOMIC
     __always_inline
 #endif /* MDBX_64BIT_ATOMIC */
-    void
-    safe64_inc(mdbx_atomic_uint64_t *p, const uint64_t v) {
+    void safe64_inc(mdbx_atomic_uint64_t *p, const uint64_t v) {
   assert(v > 0);
   safe64_update(p, safe64_read(p) + v);
 }
 
 #endif /* !__cplusplus */
-
-
 
 /* Internal prototypes */
 
@@ -3759,8 +3731,6 @@ MDBX_INTERNAL int coherency_check_written(const MDBX_env *env, const txnid_t txn
                                           const intptr_t pgno, uint64_t *timestamp);
 MDBX_INTERNAL int coherency_timeout(uint64_t *timestamp, intptr_t pgno, const MDBX_env *env);
 
-
-
 /* List of txnid */
 typedef txnid_t *txl_t;
 typedef const txnid_t *const_txl_t;
@@ -3780,7 +3750,6 @@ MDBX_INTERNAL int __must_check_result txl_append(txl_t __restrict *ptxl, txnid_t
 MDBX_INTERNAL void txl_sort(txl_t txl);
 
 MDBX_INTERNAL bool txl_contain(const txl_t txl, txnid_t id);
-
 
 /*------------------------------------------------------------------------------
  * Unaligned access */
@@ -3983,7 +3952,6 @@ static inline void poke_pgno(void *const __restrict ptr, const pgno_t pgno) {
     memcpy(ptr, &pgno, sizeof(pgno));
 }
 #if defined(_WIN32) || defined(_WIN64)
-
 
 typedef union osal_srwlock {
   __anonymous_struct_extension__ struct {
@@ -4213,7 +4181,7 @@ enum txn_flags {
   txn_rw_begin_flags = MDBX_TXN_NOMETASYNC | MDBX_TXN_NOSYNC | MDBX_TXN_TRY,
   txn_shrink_allowed = UINT32_C(0x40000000),
   txn_parked = MDBX_TXN_PARKED,
-  txn_gc_drained = 0x40 /* GC was depleted up to oldest reader */,
+  txn_gc_drained = 0x100 /* GC was depleted up to oldest reader */,
   txn_state_flags = MDBX_TXN_FINISHED | MDBX_TXN_ERROR | MDBX_TXN_DIRTY | MDBX_TXN_SPILLS | MDBX_TXN_HAS_CHILD |
                     MDBX_TXN_INVALID | txn_gc_drained
 };
@@ -4616,9 +4584,6 @@ MDBX_MAYBE_UNUSED static void static_checks(void) {
 
 /******************************************************************************/
 
-
-
-
 /* valid flags for mdbx_node_add() */
 #define NODE_ADD_FLAGS (N_DUP | N_TREE | MDBX_RESERVE | MDBX_APPEND)
 
@@ -4714,9 +4679,6 @@ MDBX_INTERNAL int __must_check_result node_add_dupfix(MDBX_cursor *mc, size_t in
 MDBX_INTERNAL void node_del(MDBX_cursor *mc, size_t ksize);
 
 MDBX_INTERNAL node_t *node_shrink(page_t *mp, size_t indx, node_t *node);
-
-
-
 
 #if MDBX_ENABLE_DBI_SPARSE
 
@@ -4853,9 +4815,6 @@ struct dbi_rename_result {
 };
 
 MDBX_INTERNAL struct dbi_rename_result dbi_rename_locked(MDBX_txn *txn, MDBX_dbi dbi, MDBX_val new_name);
-
-
-
 
 MDBX_NOTHROW_CONST_FUNCTION MDBX_INTERNAL pgno_t pv2pages(uint16_t pv);
 
@@ -5357,9 +5316,6 @@ MDBX_MAYBE_UNUSED static inline void osal_flush_incoherent_mmap(const void *addr
 #endif
 }
 
-
-
-
 /* Состояние курсора.
  *
  * плохой/poor:
@@ -5591,7 +5547,7 @@ enum cursor_checking {
 MDBX_INTERNAL int __must_check_result cursor_validate(const MDBX_cursor *mc);
 
 MDBX_MAYBE_UNUSED MDBX_NOTHROW_PURE_FUNCTION static inline size_t cursor_dbi(const MDBX_cursor *mc) {
-  cASSERT(mc, mc->txn && mc->txn->signature == txn_signature);
+  cASSERT(mc, mc->txn->signature == txn_signature);
   size_t dbi = mc->dbi_state - mc->txn->dbi_state;
   cASSERT(mc, dbi < mc->txn->env->n_dbi);
   return dbi;
@@ -5745,9 +5701,6 @@ static inline void cursor_drown(cursor_couple_t *couple) {
   couple->inner.cursor.dbi_state = nullptr;
 }
 
-
-
-
 static inline size_t dpl_setlen(dpl_t *dl, size_t len) {
   static const page_t dpl_stub_pageE = {INVALID_TXNID,
                                         0,
@@ -5876,14 +5829,11 @@ MDBX_INTERNAL void dpl_sift(MDBX_txn *const txn, pnl_t pl, const bool spilled);
 
 MDBX_INTERNAL void dpl_release_shadows(MDBX_txn *txn);
 
-
-
-
 typedef struct gc_update_context {
   unsigned loop;
   pgno_t prev_first_unallocated;
   bool dense;
-  size_t reserve_adj;
+  size_t reserve_adj, backlog_adj;
   size_t retired_stored;
   size_t amount, reserved, cleaned_slot, reused_slot, fill_idx;
   txnid_t cleaned_id, rid;
@@ -5912,9 +5862,6 @@ MDBX_INTERNAL pgr_t gc_alloc_ex(const MDBX_cursor *const mc, const size_t num, u
 
 MDBX_INTERNAL pgr_t gc_alloc_single(const MDBX_cursor *const mc);
 MDBX_INTERNAL int gc_update(MDBX_txn *txn, gcu_t *ctx);
-
-
-
 
 MDBX_INTERNAL int lck_setup(MDBX_env *env, mdbx_mode_t mode);
 #if MDBX_LOCKING > MDBX_LOCKING_SYSV
@@ -5945,9 +5892,6 @@ MDBX_INTERNAL int lck_rpid_set(MDBX_env *env);
 MDBX_INTERNAL int lck_rpid_clear(MDBX_env *env);
 
 MDBX_INTERNAL int lck_rpid_check(MDBX_env *env, uint32_t pid);
-
-
-
 
 static inline uint64_t meta_sign_calculate(const meta_t *meta) {
   uint64_t sign = DATASIGN_NONE;
@@ -6111,9 +6055,6 @@ MDBX_INTERNAL int __must_check_result meta_override(MDBX_env *env, size_t target
 
 MDBX_INTERNAL int meta_wipe_steady(MDBX_env *env, txnid_t inclusive_upto);
 
-
-
-
 #if !(defined(_WIN32) || defined(_WIN64))
 #define MDBX_WRITETHROUGH_THRESHOLD_DEFAULT 2
 #endif
@@ -6141,9 +6082,6 @@ static inline bool iov_empty(const iov_ctx_t *ctx) { return osal_ioring_used(ctx
 MDBX_INTERNAL __must_check_result int iov_page(MDBX_txn *txn, iov_ctx_t *ctx, page_t *dp, size_t npages);
 
 MDBX_INTERNAL __must_check_result int iov_write(iov_ctx_t *ctx);
-
-
-
 
 MDBX_INTERNAL void spill_remove(MDBX_txn *txn, size_t idx, size_t npages);
 MDBX_INTERNAL pnl_t spill_purge(MDBX_txn *txn);
@@ -6212,9 +6150,6 @@ static inline int txn_spill(MDBX_txn *const txn, MDBX_cursor *const m0, const si
 
   return spill_slowpath(txn, m0, wanna_spill_entries, wanna_spill_npages, need);
 }
-
-
-
 
 MDBX_INTERNAL int __must_check_result tree_search_finalize(MDBX_cursor *mc, const MDBX_val *key, int flags);
 MDBX_INTERNAL int tree_search_lowest(MDBX_cursor *mc);
@@ -6352,9 +6287,6 @@ MDBX_INTERNAL size_t page_subleaf2_reserve(const MDBX_env *env, size_t host_page
 
 #define page_next(mp) (*(page_t **)ptr_disp((mp)->entries, sizeof(void *) - sizeof(uint32_t)))
 
-
-
-
 MDBX_INTERNAL void rthc_ctor(void);
 MDBX_INTERNAL void rthc_dtor(const uint32_t current_pid);
 MDBX_INTERNAL void rthc_lock(void);
@@ -6392,9 +6324,6 @@ static inline void thread_key_delete(osal_thread_key_t key) {
 #endif
 }
 
-
-
-
 typedef struct walk_tbl {
   MDBX_val name;
   tree_t *internal, *nested;
@@ -6410,7 +6339,6 @@ typedef enum walk_options { dont_check_keys_ordering = 1 } walk_options_t;
 MDBX_INTERNAL int walk_pages(MDBX_txn *txn, walk_func *visitor, void *user, walk_options_t options);
 
 ///
-
 
 #define MDBX_RADIXSORT_THRESHOLD 142
 
@@ -6885,8 +6813,7 @@ MDBX_INTERNAL int walk_pages(MDBX_txn *txn, walk_func *visitor, void *user, walk
     return it;                                                                 \
   }
 /// \copyright SPDX-License-Identifier: Apache-2.0
-/// \author Леонид Юрьев aka Leonid Yuriev <leo@yuriev.ru> \date 2015-2025
-
+/// \author Леонид Юрьев aka Leonid Yuriev <leo@yuriev.ru> \date 2015-2026
 
 __cold size_t mdbx_default_pagesize(void) {
   size_t pagesize = globals.sys_pagesize;
@@ -7429,8 +7356,7 @@ LIBMDBX_API __cold intptr_t mdbx_limits_pgsize_max(void) { return __inline_mdbx_
 /// \copyright SPDX-License-Identifier: Apache-2.0
 /// \note Please refer to the COPYRIGHT file for explanations license change,
 /// credits and acknowledgments.
-/// \author Леонид Юрьев aka Leonid Yuriev <leo@yuriev.ru> \date 2015-2025
-
+/// \author Леонид Юрьев aka Leonid Yuriev <leo@yuriev.ru> \date 2015-2026
 
 typedef struct compacting_context {
   MDBX_env *env;
@@ -8338,8 +8264,7 @@ __cold int mdbx_env_copyW(MDBX_env *env, const wchar_t *dest_path, MDBX_copy_fla
   return LOG_IFERR(rc);
 }
 /// \copyright SPDX-License-Identifier: Apache-2.0
-/// \author Леонид Юрьев aka Leonid Yuriev <leo@yuriev.ru> \date 2015-2025
-
+/// \author Леонид Юрьев aka Leonid Yuriev <leo@yuriev.ru> \date 2015-2026
 
 MDBX_cursor *mdbx_cursor_create(void *context) {
   cursor_couple_t *couple = osal_calloc(1, sizeof(cursor_couple_t));
@@ -9091,8 +9016,7 @@ __cold int mdbx_cursor_ignord(MDBX_cursor *mc) {
   return MDBX_SUCCESS;
 }
 /// \copyright SPDX-License-Identifier: Apache-2.0
-/// \author Леонид Юрьев aka Leonid Yuriev <leo@yuriev.ru> \date 2015-2025
-
+/// \author Леонид Юрьев aka Leonid Yuriev <leo@yuriev.ru> \date 2015-2026
 
 int mdbx_dbi_open2(MDBX_txn *txn, const MDBX_val *name, MDBX_db_flags_t flags, MDBX_dbi *dbi) {
   return LOG_IFERR(dbi_open(txn, name, flags, dbi, nullptr, nullptr));
@@ -9405,8 +9329,7 @@ bailout:
   return LOG_IFERR(rc);
 }
 /// \copyright SPDX-License-Identifier: Apache-2.0
-/// \author Леонид Юрьев aka Leonid Yuriev <leo@yuriev.ru> \date 2015-2025
-
+/// \author Леонид Юрьев aka Leonid Yuriev <leo@yuriev.ru> \date 2015-2026
 
 __cold static intptr_t reasonable_db_maxsize(void) {
   static intptr_t cached_result;
@@ -10433,14 +10356,13 @@ __cold int mdbx_env_set_geometry(MDBX_env *env, intptr_t size_lower, intptr_t si
     /* is requested some auto-value for pagesize ? */
     if (pagesize >= INT_MAX /* maximal */)
       pagesize = MDBX_MAX_PAGESIZE;
-    else if (pagesize <= 0) {
-      if (pagesize < 0 /* default */) {
-        pagesize = globals.sys_pagesize;
-        if ((uintptr_t)pagesize > MDBX_MAX_PAGESIZE)
-          pagesize = MDBX_MAX_PAGESIZE;
-        eASSERT(env, (uintptr_t)pagesize >= MDBX_MIN_PAGESIZE);
-      } else if (pagesize == 0 /* minimal */)
-        pagesize = MDBX_MIN_PAGESIZE;
+    else if (pagesize == 0 /* minimal */)
+      pagesize = MDBX_MIN_PAGESIZE;
+    else if (pagesize < 0 /* default */) {
+      pagesize = globals.sys_pagesize;
+      if ((uintptr_t)pagesize > MDBX_MAX_PAGESIZE)
+        pagesize = MDBX_MAX_PAGESIZE;
+      eASSERT(env, (uintptr_t)pagesize >= MDBX_MIN_PAGESIZE);
 
       /* choose pagesize */
       intptr_t top = (size_now > size_lower) ? size_now : size_lower;
@@ -10847,8 +10769,7 @@ __cold int mdbx_env_stat_ex(const MDBX_env *env, const MDBX_txn *txn, MDBX_stat 
   return LOG_IFERR(rc);
 }
 /// \copyright SPDX-License-Identifier: Apache-2.0
-/// \author Леонид Юрьев aka Leonid Yuriev <leo@yuriev.ru> \date 2015-2025
-
+/// \author Леонид Юрьев aka Leonid Yuriev <leo@yuriev.ru> \date 2015-2026
 
 /*------------------------------------------------------------------------------
  * Readers API */
@@ -11011,8 +10932,7 @@ int mdbx_txn_unlock(MDBX_env *env) {
   return MDBX_SUCCESS;
 }
 /// \copyright SPDX-License-Identifier: Apache-2.0
-/// \author Леонид Юрьев aka Leonid Yuriev <leo@yuriev.ru> \date 2015-2025
-
+/// \author Леонид Юрьев aka Leonid Yuriev <leo@yuriev.ru> \date 2015-2026
 
 static inline double key2double(const int64_t key) {
   union {
@@ -11207,8 +11127,7 @@ int64_t mdbx_int64_from_key(const MDBX_val v) {
   return (int64_t)(unaligned_peek_u64(2, v.iov_base) - UINT64_C(0x8000000000000000));
 }
 /// \copyright SPDX-License-Identifier: Apache-2.0
-/// \author Леонид Юрьев aka Leonid Yuriev <leo@yuriev.ru> \date 2015-2025
-
+/// \author Леонид Юрьев aka Leonid Yuriev <leo@yuriev.ru> \date 2015-2026
 
 __cold int mdbx_is_readahead_reasonable(size_t volume, intptr_t redundancy) {
   if (volume <= 1024 * 1024 * 4ul)
@@ -11492,8 +11411,7 @@ const char *mdbx_strerror_ANSI2OEM(int errnum) {
 }
 #endif /* Bit of madness for Windows */
 /// \copyright SPDX-License-Identifier: Apache-2.0
-/// \author Леонид Юрьев aka Leonid Yuriev <leo@yuriev.ru> \date 2015-2025
-
+/// \author Леонид Юрьев aka Leonid Yuriev <leo@yuriev.ru> \date 2015-2026
 
 static pgno_t env_max_pgno(const MDBX_env *env) {
   return env->ps ? bytes2pgno(env, env->geo_in_bytes.upper ? env->geo_in_bytes.upper : MAX_MAPSIZE) : PAGELIST_LIMIT;
@@ -12066,8 +11984,7 @@ __cold int mdbx_env_get_option(const MDBX_env *env, const MDBX_option_t option, 
   return MDBX_SUCCESS;
 }
 /// \copyright SPDX-License-Identifier: Apache-2.0
-/// \author Леонид Юрьев aka Leonid Yuriev <leo@yuriev.ru> \date 2015-2025
-
+/// \author Леонид Юрьев aka Leonid Yuriev <leo@yuriev.ru> \date 2015-2026
 
 typedef struct diff_result {
   ptrdiff_t diff;
@@ -12430,8 +12347,7 @@ __hot int mdbx_estimate_range(const MDBX_txn *txn, MDBX_dbi dbi, const MDBX_val 
   return MDBX_SUCCESS;
 }
 /// \copyright SPDX-License-Identifier: Apache-2.0
-/// \author Леонид Юрьев aka Leonid Yuriev <leo@yuriev.ru> \date 2015-2025
-
+/// \author Леонид Юрьев aka Leonid Yuriev <leo@yuriev.ru> \date 2015-2026
 
 __cold int mdbx_dbi_dupsort_depthmask(const MDBX_txn *txn, MDBX_dbi dbi, uint32_t *mask) {
   if (unlikely(!mask))
@@ -12883,15 +12799,13 @@ int mdbx_replace(MDBX_txn *txn, MDBX_dbi dbi, const MDBX_val *key, MDBX_val *new
   return mdbx_replace_ex(txn, dbi, key, new_data, old_data, flags, default_value_preserver, nullptr);
 }
 /// \copyright SPDX-License-Identifier: Apache-2.0
-/// \author Леонид Юрьев aka Leonid Yuriev <leo@yuriev.ru> \date 2015-2025
-
+/// \author Леонид Юрьев aka Leonid Yuriev <leo@yuriev.ru> \date 2015-2026
 
 #ifdef __SANITIZE_THREAD__
 /* LY: avoid tsan-trap by txn, mm_last_pg and geo.first_unallocated */
 __attribute__((__no_sanitize_thread__, __noinline__))
 #endif
-int mdbx_txn_straggler(const MDBX_txn *txn, int *percent)
-{
+int mdbx_txn_straggler(const MDBX_txn *txn, int *percent) {
   int rc = check_txn(txn, MDBX_TXN_BLOCKED - MDBX_TXN_PARKED);
   if (unlikely(rc != MDBX_SUCCESS))
     return LOG_IFERR((rc > 0) ? -rc : rc);
@@ -13370,8 +13284,8 @@ int mdbx_txn_commit_ex(MDBX_txn *txn, MDBX_commit_latency *latency) {
       goto done;
     }
 
-    /* Preserve space for spill list to avoid parent's state corruption
-     * if allocation fails. */
+    /* Preserve space for parent->tw.repnl and spill list to avoid parent's
+     * state corruption if allocation fails. */
     const size_t parent_retired_len = (uintptr_t)parent->tw.retired_pages;
     tASSERT(txn, parent_retired_len <= MDBX_PNL_GETSIZE(txn->tw.retired_pages));
     const size_t retired_delta = MDBX_PNL_GETSIZE(txn->tw.retired_pages) - parent_retired_len;
@@ -13804,8 +13718,7 @@ int mdbx_txn_info(const MDBX_txn *txn, MDBX_txn_info *info, bool scan_rlt) {
   return MDBX_SUCCESS;
 }
 /// \copyright SPDX-License-Identifier: Apache-2.0
-/// \author Леонид Юрьев aka Leonid Yuriev <leo@yuriev.ru> \date 2015-2025
-
+/// \author Леонид Юрьев aka Leonid Yuriev <leo@yuriev.ru> \date 2015-2026
 
 struct audit_ctx {
   size_t used;
@@ -13912,8 +13825,7 @@ __cold int audit_ex(MDBX_txn *txn, size_t retired_stored, bool dont_filter_gc) {
   return rc;
 }
 /// \copyright SPDX-License-Identifier: Apache-2.0
-/// \author Леонид Юрьев aka Leonid Yuriev <leo@yuriev.ru> \date 2015-2025
-
+/// \author Леонид Юрьев aka Leonid Yuriev <leo@yuriev.ru> \date 2015-2026
 
 typedef struct MDBX_chk_internal {
   MDBX_chk_context_t *usr;
@@ -13925,11 +13837,11 @@ typedef struct MDBX_chk_internal {
   bool got_break;
   bool write_locked;
   uint8_t scope_depth;
+  pgno_t last_nested_root;
 
   MDBX_chk_table_t table_gc, table_main;
   int16_t *pagemap;
   MDBX_chk_table_t *last_lookup;
-  const void *last_nested;
   MDBX_chk_scope_t scope_stack[12];
   MDBX_chk_table_t *table[MDBX_MAX_DBI + CORE_DBS];
 
@@ -14418,9 +14330,9 @@ static void histogram_reduce(struct MDBX_chk_histogram *p) {
   p->ranges[min_i].end = p->ranges[min_i + 1].end;
   p->ranges[min_i].amount += p->ranges[min_i + 1].amount;
   p->ranges[min_i].count += p->ranges[min_i + 1].count;
-  if (min_i < last)
+  if (min_i < last - 1)
     // перемещаем хвост
-    memmove(p->ranges + min_i, p->ranges + min_i + 1, (last - min_i) * sizeof(p->ranges[0]));
+    memmove(p->ranges + min_i + 1, p->ranges + min_i + 2, (last - min_i - 1) * sizeof(p->ranges[0]));
   // обнуляем последний элемент и продолжаем
   p->ranges[last].count = 0;
 }
@@ -14617,8 +14529,7 @@ __cold static int chk_pgvisitor(const size_t pgno, const unsigned npages, void *
                        chk_v2a(chk, &tbl->name), tbl->flags, deep);
       nested = nullptr;
     }
-  } else
-    chk->last_nested = nullptr;
+  }
 
   const char *pagetype_caption;
   bool branch = false;
@@ -14671,9 +14582,9 @@ __cold static int chk_pgvisitor(const size_t pgno, const unsigned npages, void *
     } else {
       pagetype_caption = (pagetype == page_leaf) ? "nested-leaf" : "nested-leaf-dupfix";
       tbl->pages.nested_leaf += 1;
-      if (chk->last_nested != nested) {
+      if (chk->last_nested_root != nested->root) {
         histogram_acc(height, &tbl->histogram.nested_tree);
-        chk->last_nested = nested;
+        chk->last_nested_root = nested->root;
       }
       if (height != nested->height)
         chk_object_issue(scope, "page", pgno, "wrong nested-tree height", "actual %i != %i dupsort-node %s", height,
@@ -15707,8 +15618,7 @@ __cold int mdbx_env_chk(MDBX_env *env, const struct MDBX_chk_callbacks *cb, MDBX
   return LOG_IFERR(rc);
 }
 /// \copyright SPDX-License-Identifier: Apache-2.0
-/// \author Леонид Юрьев aka Leonid Yuriev <leo@yuriev.ru> \date 2015-2025
-
+/// \author Леонид Юрьев aka Leonid Yuriev <leo@yuriev.ru> \date 2015-2026
 
 /*------------------------------------------------------------------------------
  * Pack/Unpack 16-bit values for Grow step & Shrink threshold */
@@ -16015,8 +15925,7 @@ uint32_t combine_durability_flags(const uint32_t a, const uint32_t b) {
   return r;
 }
 /// \copyright SPDX-License-Identifier: Apache-2.0
-/// \author Леонид Юрьев aka Leonid Yuriev <leo@yuriev.ru> \date 2015-2025
-
+/// \author Леонид Юрьев aka Leonid Yuriev <leo@yuriev.ru> \date 2015-2026
 
 /* check against https://libmdbx.dqdkfa.ru/dead-github/issues/269 */
 static bool coherency_check(const MDBX_env *env, const txnid_t txnid, const volatile tree_t *trees,
@@ -16178,8 +16087,7 @@ bool coherency_check_meta(const MDBX_env *env, const volatile meta_t *meta, bool
 /// \copyright SPDX-License-Identifier: Apache-2.0
 /// \note Please refer to the COPYRIGHT file for explanations license change,
 /// credits and acknowledgments.
-/// \author Леонид Юрьев aka Leonid Yuriev <leo@yuriev.ru> \date 2015-2025
-
+/// \author Леонид Юрьев aka Leonid Yuriev <leo@yuriev.ru> \date 2015-2026
 
 __cold int cursor_validate(const MDBX_cursor *mc) {
   if (!mc->txn->tw.dirtylist) {
@@ -16398,7 +16306,7 @@ MDBX_cursor *cursor_eot(MDBX_cursor *mc, MDBX_txn *txn, const bool merge) {
   MDBX_cursor *const next = mc->next;
   const unsigned stage = mc->signature;
   MDBX_cursor *const bk = mc->backup;
-  ENSURE(txn->env, stage == cur_signature_live || (stage == cur_signature_wait4eot && bk));
+  ENSURE(txn->env, stage == cur_signature_live || stage == cur_signature_wait4eot);
   tASSERT(txn, mc->txn == txn);
   if (bk) {
     subcur_t *mx = mc->subcur;
@@ -16429,10 +16337,13 @@ MDBX_cursor *cursor_eot(MDBX_cursor *mc, MDBX_txn *txn, const bool merge) {
     bk->signature = 0;
     osal_free(bk);
   } else {
-    ENSURE(mc->txn->env, stage == cur_signature_live);
-    mc->signature = cur_signature_ready4dispose /* Cursor may be reused */;
-    mc->next = mc;
     cursor_drown((cursor_couple_t *)mc);
+    mc->next = mc;
+    if (stage == cur_signature_wait4eot) {
+      mc->signature = 0;
+      osal_free(mc);
+    } else
+      mc->signature = cur_signature_ready4dispose /* Cursor may be reused */;
   }
   return next;
 }
@@ -16979,7 +16890,7 @@ __hot int cursor_put(MDBX_cursor *mc, const MDBX_val *key, MDBX_val *data, unsig
       }
     } else {
       csr_t csr =
-          /* olddata may not be updated in case DUPFIX-page of dupfix-table */
+          /* old_data may not be updated in case DUPFIX-page of dupfix-table */
           cursor_seek(mc, (MDBX_val *)key, &old_data, MDBX_SET);
       rc = csr.err;
       exact = csr.exact;
@@ -16992,12 +16903,9 @@ __hot int cursor_put(MDBX_cursor *mc, const MDBX_val *key, MDBX_val *data, unsig
           return MDBX_KEYEXIST;
         }
         if (unlikely(mc->flags & z_inner)) {
-          /* nested subtree of DUPSORT-database with the same key,
-           * nothing to update */
-          eASSERT(env, data->iov_len == 0 && (old_data.iov_len == 0 ||
-                                              /* olddata may not be updated in case
-                                                 DUPFIX-page of dupfix-table */
-                                              (mc->tree->flags & MDBX_DUPFIXED)));
+          /* nested subtree of DUPSORT-database with the same key, nothing to update */
+          eASSERT(env, data->iov_len == 0 && (/* old_data may not be updated in case DUPFIX-page of dupfix-table */
+                                              (mc->tree->flags & MDBX_DUPFIXED) || old_data.iov_len == 0));
           return MDBX_SUCCESS;
         }
         if (unlikely(flags & MDBX_ALLDUPS) && inner_pointed(mc)) {
@@ -17549,8 +17457,7 @@ insert_node:;
           if (!is_related(mc, m2) || m2->pg[mc->top] != mp)
             continue;
           if (/* пропускаем незаполненные курсоры, иначе получится что у такого
-                 курсора будет инициализирован вложенный,
-                 что антилогично и бесполезно. */
+                 курсора будет инициализирован вложенный, что антилогично и бесполезно. */
               is_filled(m2) && m2->ki[mc->top] == mc->ki[mc->top]) {
             cASSERT(m2, m2->subcur->cursor.clc == mx->cursor.clc);
             m2->subcur->nested_tree = mx->nested_tree;
@@ -18571,8 +18478,7 @@ int cursor_check(const MDBX_cursor *mc, int txn_bad_bits) {
   return MDBX_SUCCESS;
 }
 /// \copyright SPDX-License-Identifier: Apache-2.0
-/// \author Леонид Юрьев aka Leonid Yuriev <leo@yuriev.ru> \date 2015-2025
-
+/// \author Леонид Юрьев aka Leonid Yuriev <leo@yuriev.ru> \date 2015-2026
 
 #if MDBX_ENABLE_DBI_SPARSE
 size_t dbi_bitmap_ctz_fallback(const MDBX_txn *txn, intptr_t bmi) {
@@ -18756,7 +18662,7 @@ int dbi_defer_release(MDBX_env *const env, defer_free_item_t *const chain) {
 /* Export or close DBI handles opened in this txn. */
 int dbi_update(MDBX_txn *txn, int keep) {
   MDBX_env *const env = txn->env;
-  tASSERT(txn, !txn->parent && txn == env->basal_txn);
+  tASSERT(txn, (!txn->parent && txn == env->basal_txn) || !keep);
   bool locked = false;
   defer_free_item_t *defer_chain = nullptr;
   TXN_FOREACH_DBI_USER(txn, dbi) {
@@ -19282,8 +19188,7 @@ __cold const tree_t *dbi_dig(const MDBX_txn *txn, const size_t dbi, tree_t *fall
 
 int dbi_close_release(MDBX_env *env, MDBX_dbi dbi) { return dbi_defer_release(env, dbi_close_locked(env, dbi)); }
 /// \copyright SPDX-License-Identifier: Apache-2.0
-/// \author Леонид Юрьев aka Leonid Yuriev <leo@yuriev.ru> \date 2015-2025
-
+/// \author Леонид Юрьев aka Leonid Yuriev <leo@yuriev.ru> \date 2015-2026
 
 static inline size_t dpl_size2bytes(ptrdiff_t size) {
   assert(size > CURSOR_STACK_SIZE && (size_t)size <= PAGELIST_LIMIT);
@@ -19767,8 +19672,7 @@ void dpl_release_shadows(MDBX_txn *txn) {
   dpl_clear(dl);
 }
 /// \copyright SPDX-License-Identifier: Apache-2.0
-/// \author Леонид Юрьев aka Leonid Yuriev <leo@yuriev.ru> \date 2015-2025
-
+/// \author Леонид Юрьев aka Leonid Yuriev <leo@yuriev.ru> \date 2015-2026
 
 __cold int dxb_read_header(MDBX_env *env, meta_t *dest, const int lck_exclusive, const mdbx_mode_t mode_bits) {
   memset(dest, 0, sizeof(meta_t));
@@ -20867,12 +20771,14 @@ int dxb_sync_locked(MDBX_env *env, unsigned flags, meta_t *const pending, troika
 
   /* LY: step#1 - sync previously written/updated data-pages */
   rc = MDBX_RESULT_FALSE /* carry steady */;
-  if (atomic_load64(&env->lck->unsynced_pages, mo_Relaxed)) {
+  const uint64_t snap_unsynced_pages = atomic_load64(&env->lck->unsynced_pages, mo_Relaxed);
+  if (snap_unsynced_pages) {
+    if (snap_unsynced_pages == 1 && (flags & MDBX_NOMETASYNC))
+      goto skip_lastmeta_sync;
+
     eASSERT(env, ((flags ^ env->flags) & MDBX_WRITEMAP) == 0);
     enum osal_syncmode_bits mode_bits = MDBX_SYNC_NONE;
-    unsigned sync_op = 0;
     if ((flags & MDBX_SAFE_NOSYNC) == 0) {
-      sync_op = 1;
       mode_bits = MDBX_SYNC_DATA;
       if (pending->geometry.first_unallocated > meta_prefer_steady(env, troika).ptr_c->geometry.now)
         mode_bits |= MDBX_SYNC_SIZE;
@@ -20880,18 +20786,15 @@ int dxb_sync_locked(MDBX_env *env, unsigned flags, meta_t *const pending, troika
         mode_bits |= MDBX_SYNC_IODQ;
     } else if (unlikely(env->incore))
       goto skip_incore_sync;
+
     if (flags & MDBX_WRITEMAP) {
 #if MDBX_ENABLE_PGOP_STAT
-      env->lck->pgops.msync.weak += sync_op;
-#else
-      (void)sync_op;
+      env->lck->pgops.msync.weak += (mode_bits > MDBX_SYNC_NONE);
 #endif /* MDBX_ENABLE_PGOP_STAT */
       rc = osal_msync(&env->dxb_mmap, 0, pgno_align2os_bytes(env, pending->geometry.first_unallocated), mode_bits);
     } else {
 #if MDBX_ENABLE_PGOP_STAT
-      env->lck->pgops.fsync.weak += sync_op;
-#else
-      (void)sync_op;
+      env->lck->pgops.fsync.weak += (mode_bits > MDBX_SYNC_NONE);
 #endif /* MDBX_ENABLE_PGOP_STAT */
       rc = osal_fsync(env->lazy_fd, mode_bits);
     }
@@ -20914,6 +20817,7 @@ int dxb_sync_locked(MDBX_env *env, unsigned flags, meta_t *const pending, troika
     /* Может быть нулевым если unsynced_pages > 0 в результате спиллинга.
      * eASSERT(env, env->lck->eoos_timestamp.weak != 0); */
     unaligned_poke_u64(4, pending->sign, DATASIGN_WEAK);
+  skip_lastmeta_sync:;
   }
 
   const bool legal4overwrite = head.txnid == pending->unsafe_txnid &&
@@ -21048,13 +20952,17 @@ int dxb_sync_locked(MDBX_env *env, unsigned flags, meta_t *const pending, troika
     }
     osal_flush_incoherent_mmap(target, sizeof(meta_t), globals.sys_pagesize);
     /* sync meta-pages */
-    if ((flags & MDBX_NOMETASYNC) == 0 && env->fd4meta == env->lazy_fd && !env->incore) {
+    if (env->fd4meta == env->lazy_fd && !env->incore) {
+      if (flags & MDBX_NOMETASYNC)
+        env->lck->unsynced_pages.weak += 1;
+      else {
 #if MDBX_ENABLE_PGOP_STAT
-      env->lck->pgops.fsync.weak += 1;
+        env->lck->pgops.fsync.weak += 1;
 #endif /* MDBX_ENABLE_PGOP_STAT */
-      rc = osal_fsync(env->lazy_fd, MDBX_SYNC_DATA | MDBX_SYNC_IODQ);
-      if (rc != MDBX_SUCCESS)
-        goto undo;
+        rc = osal_fsync(env->lazy_fd, MDBX_SYNC_DATA | MDBX_SYNC_IODQ);
+        if (rc != MDBX_SUCCESS)
+          goto undo;
+      }
     }
   }
 
@@ -21100,8 +21008,7 @@ fail:
   return rc;
 }
 /// \copyright SPDX-License-Identifier: Apache-2.0
-/// \author Леонид Юрьев aka Leonid Yuriev <leo@yuriev.ru> \date 2015-2025
-
+/// \author Леонид Юрьев aka Leonid Yuriev <leo@yuriev.ru> \date 2015-2026
 
 MDBX_txn *env_owned_wrtxn(const MDBX_env *env) {
   if (likely(env->basal_txn)) {
@@ -21706,8 +21613,7 @@ __cold int env_close(MDBX_env *env, bool resurrect_after_fork) {
   return rc;
 }
 /// \copyright SPDX-License-Identifier: Apache-2.0
-/// \author Леонид Юрьев aka Leonid Yuriev <leo@yuriev.ru> \date 2015-2025
-
+/// \author Леонид Юрьев aka Leonid Yuriev <leo@yuriev.ru> \date 2015-2026
 
 #if MDBX_USE_MINCORE
 /*------------------------------------------------------------------------------
@@ -22849,7 +22755,8 @@ depleted_gc:
   /* Does reclaiming stopped at the last steady point? */
   const meta_ptr_t recent = meta_recent(env, &txn->tw.troika);
   const meta_ptr_t prefer_steady = meta_prefer_steady(env, &txn->tw.troika);
-  if (recent.ptr_c != prefer_steady.ptr_c && prefer_steady.is_steady && detent == prefer_steady.txnid + 1) {
+  if ((flags & ALLOC_UNIMPORTANT) == 0 && recent.ptr_c != prefer_steady.ptr_c && prefer_steady.is_steady &&
+      detent == prefer_steady.txnid) {
     DEBUG("gc-kick-steady: recent %" PRIaTXN "-%s, steady %" PRIaTXN "-%s, detent %" PRIaTXN, recent.txnid,
           durable_caption(recent.ptr_c), prefer_steady.txnid, durable_caption(prefer_steady.ptr_c), detent);
     const pgno_t autosync_threshold = atomic_load32(&env->lck->autosync_threshold, mo_Relaxed);
@@ -22887,13 +22794,14 @@ depleted_gc:
       env->lck->pgops.gc_prof.flushes += 1;
 #endif /* MDBX_ENABLE_PROFGC */
       meta_t meta = *recent.ptr_c;
-      ret.err = dxb_sync_locked(env, env->flags & MDBX_WRITEMAP, &meta, &txn->tw.troika);
+      ret.err = dxb_sync_locked(env, env->flags & (MDBX_WRITEMAP | MDBX_NOMETASYNC), &meta, &txn->tw.troika);
       DEBUG("gc-make-steady, rc %d", ret.err);
       eASSERT(env, ret.err != MDBX_RESULT_TRUE);
       if (unlikely(ret.err != MDBX_SUCCESS))
         goto fail;
-      eASSERT(env, prefer_steady.ptr_c != meta_prefer_steady(env, &txn->tw.troika).ptr_c);
-      goto retry_gc_refresh_oldest;
+      if (prefer_steady.ptr_c != meta_prefer_steady(env, &txn->tw.troika).ptr_c)
+        goto retry_gc_refresh_oldest;
+      eASSERT(env, env->incore);
     }
   }
 
@@ -22920,14 +22828,11 @@ depleted_gc:
 
 no_gc:
   eASSERT(env, pgno == 0);
-#ifndef MDBX_ENABLE_BACKLOG_DEPLETED
-#define MDBX_ENABLE_BACKLOG_DEPLETED 0
-#endif /* MDBX_ENABLE_BACKLOG_DEPLETED*/
-  if (MDBX_ENABLE_BACKLOG_DEPLETED && unlikely(!(txn->flags & txn_gc_drained))) {
+  if (unlikely(!(txn->flags & txn_gc_drained))) {
     ret.err = MDBX_BACKLOG_DEPLETED;
     goto fail;
   }
-  if (flags & ALLOC_RESERVE) {
+  if (flags & (ALLOC_RESERVE | ALLOC_UNIMPORTANT)) {
     ret.err = MDBX_NOTFOUND;
     goto fail;
   }
@@ -23050,8 +22955,7 @@ __hot pgr_t gc_alloc_single(const MDBX_cursor *const mc) {
   return gc_alloc_ex(mc, 1, ALLOC_DEFAULT);
 }
 /// \copyright SPDX-License-Identifier: Apache-2.0
-/// \author Леонид Юрьев aka Leonid Yuriev <leo@yuriev.ru> \date 2015-2025
-
+/// \author Леонид Юрьев aka Leonid Yuriev <leo@yuriev.ru> \date 2015-2026
 
 MDBX_NOTHROW_PURE_FUNCTION static bool is_lifo(const MDBX_txn *txn) {
   return (txn->env->flags & MDBX_LIFORECLAIM) != 0;
@@ -23136,16 +23040,18 @@ static int prepare_backlog(MDBX_txn *txn, gcu_t *ctx) {
   const size_t for_tree_after_touch = for_rebalance + for_split;
   const size_t for_all_before_touch = for_repnl + for_tree_before_touch;
   const size_t for_all_after_touch = for_repnl + for_tree_after_touch;
+  const size_t enough_before_touch = for_all_before_touch + ctx->backlog_adj;
+  const size_t enough_after_touch = for_all_after_touch + ctx->backlog_adj;
 
-  if (likely(for_repnl < 2 && backlog_size(txn) > for_all_before_touch) &&
+  if (likely(for_repnl < 2 && backlog_size(txn) > enough_before_touch) &&
       (ctx->cursor.top < 0 || is_modifable(txn, ctx->cursor.pg[ctx->cursor.top])))
     return MDBX_SUCCESS;
 
-  TRACE(">> retired-stored %zu, left %zi, backlog %zu, need %zu (4list %zu, "
+  TRACE(">> retired-stored %zu, left %zi, backlog %zu, adj %zu, need %zu (4list %zu, "
         "4split %zu, "
         "4cow %zu, 4tree %zu)",
-        ctx->retired_stored, retired_left, backlog_size(txn), for_all_before_touch, for_repnl, for_split, for_cow,
-        for_tree_before_touch);
+        ctx->retired_stored, retired_left, backlog_size(txn), ctx->backlog_adj, enough_before_touch, for_repnl,
+        for_split, for_cow, for_tree_before_touch);
 
   int err = touch_gc(ctx);
   TRACE("== after-touch, backlog %zu, err %d", backlog_size(txn), err);
@@ -23164,12 +23070,12 @@ static int prepare_backlog(MDBX_txn *txn, gcu_t *ctx) {
     cASSERT(&ctx->cursor, backlog_size(txn) >= for_repnl || err != MDBX_SUCCESS);
   }
 
-  while (backlog_size(txn) < for_all_after_touch && err == MDBX_SUCCESS)
+  while (backlog_size(txn) < enough_after_touch && err == MDBX_SUCCESS)
     err = gc_alloc_ex(&ctx->cursor, 0, ALLOC_RESERVE | ALLOC_UNIMPORTANT).err;
 
-  TRACE("<< backlog %zu, err %d, gc: height %u, branch %zu, leaf %zu, large "
+  TRACE("<< backlog %zu, err %d, adj %zu, gc: height %u, branch %zu, leaf %zu, large "
         "%zu, entries %zu",
-        backlog_size(txn), err, txn->dbs[FREE_DBI].height, (size_t)txn->dbs[FREE_DBI].branch_pages,
+        backlog_size(txn), err, ctx->backlog_adj, txn->dbs[FREE_DBI].height, (size_t)txn->dbs[FREE_DBI].branch_pages,
         (size_t)txn->dbs[FREE_DBI].leaf_pages, (size_t)txn->dbs[FREE_DBI].large_pages,
         (size_t)txn->dbs[FREE_DBI].items);
   tASSERT(txn, err != MDBX_NOTFOUND || (txn->flags & txn_gc_drained) != 0);
@@ -23584,6 +23490,7 @@ int gc_update(MDBX_txn *txn, gcu_t *ctx) {
    * But page numbers cannot disappear from txn->tw.retired_pages[]. */
 retry_clean_adj:
   ctx->reserve_adj = 0;
+  ctx->backlog_adj = 0;
 retry:
   ctx->loop += !(ctx->prev_first_unallocated > txn->geo.first_unallocated);
   TRACE(">> restart, loop %u", ctx->loop);
@@ -23598,8 +23505,13 @@ retry:
 
   if (unlikely(ctx->dense || ctx->prev_first_unallocated > txn->geo.first_unallocated)) {
     rc = clean_stored_retired(txn, ctx);
-    if (unlikely(rc != MDBX_SUCCESS))
+    if (unlikely(rc != MDBX_SUCCESS)) {
+      if (rc == MDBX_BACKLOG_DEPLETED) {
+        ctx->backlog_adj += ctx->backlog_adj + 1;
+        goto retry;
+      }
       goto bailout;
+    }
   }
 
   ctx->prev_first_unallocated = txn->geo.first_unallocated;
@@ -23641,8 +23553,13 @@ retry:
           TRACE("%s: cleanup-reclaimed-id [%zu]%" PRIaTXN, dbg_prefix(ctx), ctx->cleaned_slot, ctx->cleaned_id);
           tASSERT(txn, *txn->cursors == &ctx->cursor);
           rc = cursor_del(&ctx->cursor, 0);
-          if (unlikely(rc != MDBX_SUCCESS))
+          if (unlikely(rc != MDBX_SUCCESS)) {
+            if (rc == MDBX_BACKLOG_DEPLETED) {
+              ctx->backlog_adj += ctx->backlog_adj + 1;
+              goto retry;
+            }
             goto bailout;
+          }
         } while (ctx->cleaned_slot < MDBX_PNL_GETSIZE(txn->tw.gc.retxl));
         txl_sort(txn->tw.gc.retxl);
       }
@@ -23680,8 +23597,13 @@ retry:
         TRACE("%s: cleanup-reclaimed-id %" PRIaTXN, dbg_prefix(ctx), ctx->cleaned_id);
         tASSERT(txn, *txn->cursors == &ctx->cursor);
         rc = cursor_del(&ctx->cursor, 0);
-        if (unlikely(rc != MDBX_SUCCESS))
+        if (unlikely(rc != MDBX_SUCCESS)) {
+          if (rc == MDBX_BACKLOG_DEPLETED) {
+            ctx->backlog_adj += ctx->backlog_adj + 1;
+            goto retry;
+          }
           goto bailout;
+        }
       }
     }
 
@@ -23726,8 +23648,13 @@ retry:
     if (ctx->retired_stored < MDBX_PNL_GETSIZE(txn->tw.retired_pages)) {
       /* store retired-list into GC */
       rc = gcu_retired(txn, ctx);
-      if (unlikely(rc != MDBX_SUCCESS))
+      if (unlikely(rc != MDBX_SUCCESS)) {
+        if (rc == MDBX_BACKLOG_DEPLETED) {
+          ctx->backlog_adj += ctx->backlog_adj + 1;
+          goto retry;
+        }
         goto bailout;
+      }
       continue;
     }
 
@@ -23756,6 +23683,7 @@ retry:
         continue;
       if (likely(rc == MDBX_RESULT_TRUE))
         goto retry;
+      eASSERT(env, rc != MDBX_BACKLOG_DEPLETED);
       goto bailout;
     }
     tASSERT(txn, rid_result.err == MDBX_SUCCESS);
@@ -23833,8 +23761,13 @@ retry:
     prepare_backlog(txn, ctx);
     rc = cursor_put(&ctx->cursor, &key, &data, MDBX_RESERVE | MDBX_NOOVERWRITE);
     tASSERT(txn, pnl_check_allocated(txn->tw.repnl, txn->geo.first_unallocated - MDBX_ENABLE_REFUND));
-    if (unlikely(rc != MDBX_SUCCESS))
+    if (unlikely(rc != MDBX_SUCCESS)) {
+      if (rc == MDBX_BACKLOG_DEPLETED) {
+        ctx->backlog_adj += ctx->backlog_adj + 1;
+        goto retry;
+      }
       goto bailout;
+    }
 
     zeroize_reserved(env, data);
     ctx->reserved += chunk;
@@ -23925,8 +23858,13 @@ retry:
         chunk = left;
       }
       rc = cursor_put(&ctx->cursor, &key, &data, MDBX_CURRENT | MDBX_RESERVE);
-      if (unlikely(rc != MDBX_SUCCESS))
+      if (unlikely(rc != MDBX_SUCCESS)) {
+        if (rc == MDBX_BACKLOG_DEPLETED) {
+          ctx->backlog_adj += ctx->backlog_adj + 1;
+          goto retry;
+        }
         goto bailout;
+      }
       zeroize_reserved(env, data);
 
       if (unlikely(txn->tw.loose_count || ctx->amount != MDBX_PNL_GETSIZE(txn->tw.repnl))) {
@@ -24019,8 +23957,7 @@ bailout:
   return rc;
 }
 /// \copyright SPDX-License-Identifier: Apache-2.0
-/// \author Леонид Юрьев aka Leonid Yuriev <leo@yuriev.ru> \date 2015-2025
-
+/// \author Леонид Юрьев aka Leonid Yuriev <leo@yuriev.ru> \date 2015-2026
 
 static void mdbx_init(void);
 static void mdbx_fini(void);
@@ -24046,8 +23983,7 @@ BOOL APIENTRY DllMain(HANDLE module, DWORD reason, LPVOID reserved)
 #if !MDBX_MANUAL_MODULE_HANDLER
 static
 #endif /* !MDBX_MANUAL_MODULE_HANDLER */
-    void NTAPI
-    mdbx_module_handler(PVOID module, DWORD reason, PVOID reserved)
+    void NTAPI mdbx_module_handler(PVOID module, DWORD reason, PVOID reserved)
 #endif /* MDBX_BUILD_SHARED_LIBRARY */
 {
   (void)reserved;
@@ -24216,7 +24152,6 @@ __cold static void mdbx_fini(void) {
 
 /******************************************************************************/
 
-
 __dll_export
 #ifdef __attribute_used__
     __attribute_used__
@@ -24242,6 +24177,8 @@ __dll_export
 #else
   #if defined(__ANDROID_API__)
     "Android" MDBX_STRINGIFY(__ANDROID_API__)
+  #elif defined(__OHOS__)
+    "Harmony OS"
   #elif defined(__linux__) || defined(__gnu_linux__)
     "Linux"
   #elif defined(EMSCRIPTEN) || defined(__EMSCRIPTEN__)
@@ -24289,7 +24226,9 @@ __dll_export
 
     "-"
 
-  #if defined(__amd64__)
+  #if defined(__e2k__) || defined(__elbrus__)
+    "Elbrus"
+  #elif defined(__amd64__)
     "AMD64"
   #elif defined(__ia32__)
     "IA32"
@@ -24326,6 +24265,8 @@ __dll_export
     "SPARC"
   #elif defined(__s390__) || defined(__s390) || defined(__zarch__) || defined(__zarch)
     "S390"
+  #elif defined(__riscv) || defined(__riscv__) || defined(__RISCV) || defined(__RISCV__)
+    "RISC-V (стеклянные бусы)"
   #else
     "UnknownARCH"
   #endif
@@ -24392,6 +24333,7 @@ __dll_export
 #else /* Windows */
     " MDBX_LOCKING=" MDBX_LOCKING_CONFIG
     " MDBX_USE_OFDLOCKS=" MDBX_USE_OFDLOCKS_CONFIG
+    " MDBX_USE_FALLOCATE=" MDBX_USE_FALLOCATE_CONFIG
 #endif /* !Windows */
     " MDBX_CACHELINE_SIZE=" MDBX_STRINGIFY(MDBX_CACHELINE_SIZE)
     " MDBX_CPU_WRITEBACK_INCOHERENT=" MDBX_STRINGIFY(MDBX_CPU_WRITEBACK_INCOHERENT)
@@ -24484,12 +24426,11 @@ const char *__asan_default_options(void) {
 #endif /* __SANITIZE_ADDRESS__ */
 
 /// \copyright SPDX-License-Identifier: Apache-2.0
-/// \author Леонид Юрьев aka Leonid Yuriev <leo@yuriev.ru> \date 2015-2025
+/// \author Леонид Юрьев aka Leonid Yuriev <leo@yuriev.ru> \date 2015-2026
 
 #if !(defined(_WIN32) || defined(_WIN64))
 /*----------------------------------------------------------------------------*
  * POSIX/non-Windows LCK-implementation */
-
 
 #if MDBX_LOCKING == MDBX_LOCKING_SYSV
 #include <sys/sem.h>
@@ -25360,7 +25301,7 @@ void lck_txn_unlock(MDBX_env *env) {
 
 #endif /* !Windows LCK-implementation */
 /// \copyright SPDX-License-Identifier: Apache-2.0
-/// \author Леонид Юрьев aka Leonid Yuriev <leo@yuriev.ru> \date 2015-2025
+/// \author Леонид Юрьев aka Leonid Yuriev <leo@yuriev.ru> \date 2015-2026
 
 #if defined(_WIN32) || defined(_WIN64)
 
@@ -25369,7 +25310,6 @@ void lck_txn_unlock(MDBX_env *env) {
  * We are not concerned for performance here.
  * If you are running Windows a performance could NOT be the goal.
  * Otherwise please use Linux. */
-
 
 #define LCK_SHARED 0
 #define LCK_EXCLUSIVE LOCKFILE_EXCLUSIVE_LOCK
@@ -25966,8 +25906,7 @@ int lck_rpid_check(MDBX_env *env, uint32_t pid) {
 
 #endif /* Windows */
 /// \copyright SPDX-License-Identifier: Apache-2.0
-/// \author Леонид Юрьев aka Leonid Yuriev <leo@yuriev.ru> \date 2015-2025
-
+/// \author Леонид Юрьев aka Leonid Yuriev <leo@yuriev.ru> \date 2015-2026
 
 __cold static int lck_setup_locked(MDBX_env *env) {
   int err = rthc_register(env);
@@ -26139,8 +26078,7 @@ void mincore_clean_cache(const MDBX_env *const env) {
   memset(env->lck->mincore_cache.begin, -1, sizeof(env->lck->mincore_cache.begin));
 }
 /// \copyright SPDX-License-Identifier: Apache-2.0
-/// \author Леонид Юрьев aka Leonid Yuriev <leo@yuriev.ru> \date 2015-2025
-
+/// \author Леонид Юрьев aka Leonid Yuriev <leo@yuriev.ru> \date 2015-2026
 
 __cold void debug_log_va(int level, const char *function, int line, const char *fmt, va_list args) {
   ENSURE(nullptr, osal_fastmutex_acquire(&globals.debug_lock) == 0);
@@ -26388,8 +26326,7 @@ __cold int mdbx_setup_debug(MDBX_log_level_t level, MDBX_debug_flags_t flags, MD
   return setup_debug(level, flags, thunk, nullptr, 0);
 }
 /// \copyright SPDX-License-Identifier: Apache-2.0
-/// \author Леонид Юрьев aka Leonid Yuriev <leo@yuriev.ru> \date 2015-2025
-
+/// \author Леонид Юрьев aka Leonid Yuriev <leo@yuriev.ru> \date 2015-2026
 
 typedef struct meta_snap {
   uint64_t txnid;
@@ -26648,9 +26585,8 @@ __cold int meta_wipe_steady(MDBX_env *env, txnid_t inclusive_upto) {
 
 int meta_sync(const MDBX_env *env, const meta_ptr_t head) {
   eASSERT(env, atomic_load32(&env->lck->meta_sync_txnid, mo_Relaxed) != (uint32_t)head.txnid);
-  /* Функция может вызываться (в том числе) при (env->flags &
-   * MDBX_NOMETASYNC) == 0 и env->fd4meta == env->dsync_fd, например если
-   * предыдущая транзакция была выполненна с флагом MDBX_NOMETASYNC. */
+  /* Функция может вызываться (в том числе) при (env->flags & MDBX_NOMETASYNC) == 0 и env->fd4meta == env->dsync_fd,
+   * например если предыдущая транзакция была выполненна с флагом MDBX_NOMETASYNC. */
 
   int rc = MDBX_RESULT_TRUE;
   if (env->flags & MDBX_WRITEMAP) {
@@ -26660,7 +26596,7 @@ int meta_sync(const MDBX_env *env, const meta_ptr_t head) {
       env->lck->pgops.msync.weak += 1;
 #endif /* MDBX_ENABLE_PGOP_STAT */
     } else {
-#if MDBX_ENABLE_PGOP_ST
+#if MDBX_ENABLE_PGOP_STAT
       env->lck->pgops.wops.weak += 1;
 #endif /* MDBX_ENABLE_PGOP_STAT */
       const page_t *page = data_page(head.ptr_c);
@@ -27043,8 +26979,7 @@ __cold int meta_validate_copy(MDBX_env *env, const meta_t *meta, meta_t *dest) {
   return meta_validate(env, dest, data_page(meta), bytes2pgno(env, ptr_dist(meta, env->dxb_mmap.base)), nullptr);
 }
 /// \copyright SPDX-License-Identifier: Apache-2.0
-/// \author Леонид Юрьев aka Leonid Yuriev <leo@yuriev.ru> \date 2015-2025
-
+/// \author Леонид Юрьев aka Leonid Yuriev <leo@yuriev.ru> \date 2015-2026
 
 bsr_t mvcc_bind_slot(MDBX_env *env) {
   eASSERT(env, env->lck_mmap.lck);
@@ -27458,8 +27393,7 @@ __cold txnid_t mvcc_kick_laggards(MDBX_env *env, const txnid_t straggler) {
 /// \copyright SPDX-License-Identifier: Apache-2.0
 /// \note Please refer to the COPYRIGHT file for explanations license change,
 /// credits and acknowledgments.
-/// \author Леонид Юрьев aka Leonid Yuriev <leo@yuriev.ru> \date 2015-2025
-
+/// \author Леонид Юрьев aka Leonid Yuriev <leo@yuriev.ru> \date 2015-2026
 
 __hot int __must_check_result node_add_dupfix(MDBX_cursor *mc, size_t indx, const MDBX_val *key) {
   page_t *mp = mc->pg[mc->top];
@@ -27820,10 +27754,9 @@ __hot struct node_search_result node_search(MDBX_cursor *mc, const MDBX_val *key
   return ret;
 }
 /// \copyright SPDX-License-Identifier: Apache-2.0
-/// \author Леонид Юрьев aka Leonid Yuriev <leo@yuriev.ru> \date 2015-2025
+/// \author Леонид Юрьев aka Leonid Yuriev <leo@yuriev.ru> \date 2015-2026
 ///
 /// https://en.wikipedia.org/wiki/Operating_system_abstraction_layer
-
 
 #if defined(_WIN32) || defined(_WIN64)
 
@@ -27834,7 +27767,18 @@ __hot struct node_search_result node_search(MDBX_cursor *mc, const MDBX_val *key
 #include <crtdbg.h>
 #endif
 
-static int waitstatus2errcode(DWORD result) {
+/* Map a result from an NTAPI call to WIN32 error code. */
+static int osal_ntstatus2errcode(NTSTATUS status) {
+  DWORD dummy;
+  OVERLAPPED ov;
+  memset(&ov, 0, sizeof(ov));
+  ov.Internal = status;
+  /* Zap: '_Param_(1)' could be '0' */
+  MDBX_SUPPRESS_GOOFY_MSVC_ANALYZER(6387);
+  return GetOverlappedResult(nullptr, &ov, &dummy, FALSE) ? MDBX_SUCCESS : (int)GetLastError();
+}
+
+MDBX_INTERNAL int osal_waitstatus2errcode(DWORD result) {
   switch (result) {
   case WAIT_OBJECT_0:
     return MDBX_SUCCESS;
@@ -27847,19 +27791,8 @@ static int waitstatus2errcode(DWORD result) {
   case WAIT_TIMEOUT:
     return ERROR_TIMEOUT;
   default:
-    return ERROR_UNHANDLED_ERROR;
+    return osal_ntstatus2errcode(result);
   }
-}
-
-/* Map a result from an NTAPI call to WIN32 error code. */
-static int ntstatus2errcode(NTSTATUS status) {
-  DWORD dummy;
-  OVERLAPPED ov;
-  memset(&ov, 0, sizeof(ov));
-  ov.Internal = status;
-  /* Zap: '_Param_(1)' could be '0' */
-  MDBX_SUPPRESS_GOOFY_MSVC_ANALYZER(6387);
-  return GetOverlappedResult(nullptr, &ov, &dummy, FALSE) ? MDBX_SUCCESS : (int)GetLastError();
 }
 
 /* We use native NT APIs to setup the memory map, so that we can
@@ -28080,7 +28013,7 @@ __cold void mdbx_panic(const char *fmt, ...) {
     if (IsDebuggerPresent())
       DebugBreak();
 #endif
-    FatalExit(ERROR_UNHANDLED_ERROR);
+    FatalExit(ERROR_UNHANDLED_EXCEPTION);
 #else
     __assert_fail(const_message, "mdbx", 0, "panic");
     abort();
@@ -28234,7 +28167,7 @@ int osal_condpair_destroy(osal_condpair_t *condpair) {
 int osal_condpair_lock(osal_condpair_t *condpair) {
 #if defined(_WIN32) || defined(_WIN64)
   DWORD code = WaitForSingleObject(condpair->mutex, INFINITE);
-  return waitstatus2errcode(code);
+  return osal_waitstatus2errcode(code);
 #else
   return osal_pthread_mutex_lock(&condpair->mutex);
 #endif
@@ -28264,7 +28197,7 @@ int osal_condpair_wait(osal_condpair_t *condpair, bool part) {
     if (code == WAIT_OBJECT_0)
       return MDBX_SUCCESS;
   }
-  return waitstatus2errcode(code);
+  return osal_waitstatus2errcode(code);
 #else
   return pthread_cond_wait(&condpair->cond[part], &condpair->mutex);
 #endif
@@ -29220,8 +29153,14 @@ int osal_pread(mdbx_filehandle_t fd, void *buf, size_t bytes, uint64_t offset) {
 
   DWORD read = 0;
   if (unlikely(!ReadFile(fd, buf, (DWORD)bytes, &read, &ov))) {
-    int rc = (int)GetLastError();
-    return (rc == MDBX_SUCCESS) ? /* paranoia */ ERROR_READ_FAULT : rc;
+    int err = (int)GetLastError();
+    if (err != ERROR_IO_PENDING)
+      return (err == MDBX_SUCCESS) ? /* paranoia */ ERROR_READ_FAULT : err;
+    if (!GetOverlappedResult(fd, &ov, &read, true)) {
+      err = (int)GetLastError();
+      CancelIo(fd);
+      return (err == MDBX_SUCCESS) ? /* paranoia */ ERROR_READ_FAULT : err;
+    }
   }
 #else
   STATIC_ASSERT_MSG(sizeof(off_t) >= sizeof(size_t), "libmdbx requires 64-bit file I/O on 64-bit systems");
@@ -29466,6 +29405,16 @@ int osal_fsetsize(mdbx_filehandle_t fd, const uint64_t length) {
     return MDBX_SUCCESS;
 #endif
 
+#if defined(__linux__) || defined(__gnu_linux__)
+  if (globals.linux_kernel_version < 0x05110000 && globals.linux_kernel_version >= 0x050a0000) {
+    struct statfs statfs_info;
+    if (fstatfs(fd, &statfs_info))
+      return errno;
+    if (statfs_info.f_type == 0xEF53 /* EXT4_SUPER_MAGIC */ && unlikely(fdatasync(fd)))
+      return errno;
+  }
+#endif /* Linux */
+
   return unlikely(ftruncate(fd, length)) ? errno : MDBX_SUCCESS;
 
 #endif /* !Windows */
@@ -29496,7 +29445,7 @@ int osal_thread_create(osal_thread_t *thread, THREAD_RESULT(THREAD_CALL *start_r
 int osal_thread_join(osal_thread_t thread) {
 #if defined(_WIN32) || defined(_WIN64)
   DWORD code = WaitForSingleObject(thread, INFINITE);
-  return waitstatus2errcode(code);
+  return osal_waitstatus2errcode(code);
 #else
   void *unused_retval = &unused_retval;
   return pthread_join(thread, &unused_retval);
@@ -29641,7 +29590,7 @@ int osal_check_fs_local(mdbx_filehandle_t handle, int flags) {
         return MDBX_EREMOTE;
     } else if (rc != STATUS_OBJECT_NOT_EXTERNALLY_BACKED && rc != STATUS_INVALID_DEVICE_REQUEST &&
                rc != STATUS_NOT_SUPPORTED)
-      return ntstatus2errcode(rc);
+      return osal_ntstatus2errcode(rc);
   }
 
   if (imports.GetVolumeInformationByHandleW && imports.GetFinalPathNameByHandleW) {
@@ -29958,7 +29907,7 @@ int osal_mmap(const int flags, osal_mmap_t *map, size_t size, const size_t limit
                         (flags & MDBX_RDONLY) ? PAGE_READONLY : PAGE_READWRITE,
                         /* AllocationAttributes */ SEC_RESERVE, map->fd);
   if (!NT_SUCCESS(err))
-    return ntstatus2errcode(err);
+    return osal_ntstatus2errcode(err);
 
   SIZE_T ViewSize = (flags & MDBX_RDONLY) ? 0 : globals.running_under_Wine ? size : limit;
   err = NtMapViewOfSection(map->section, GetCurrentProcess(), &map->base,
@@ -29973,7 +29922,7 @@ int osal_mmap(const int flags, osal_mmap_t *map, size_t size, const size_t limit
     NtClose(map->section);
     map->section = 0;
     map->base = nullptr;
-    return ntstatus2errcode(err);
+    return osal_ntstatus2errcode(err);
   }
   assert(map->base != MAP_FAILED);
 
@@ -30047,7 +29996,7 @@ int osal_munmap(osal_mmap_t *map) {
     NtClose(map->section);
   NTSTATUS rc = NtUnmapViewOfSection(GetCurrentProcess(), map->base);
   if (!NT_SUCCESS(rc))
-    ntstatus2errcode(rc);
+    osal_ntstatus2errcode(rc);
 #else
   if (unlikely(munmap(map->base, map->limit))) {
     assert(errno != 0);
@@ -30087,7 +30036,7 @@ int osal_mresize(const int flags, osal_mmap_t *map, size_t size, size_t limit) {
       SectionSize.QuadPart = size;
       status = imports.NtExtendSection(map->section, &SectionSize);
       if (!NT_SUCCESS(status))
-        return ntstatus2errcode(status);
+        return osal_ntstatus2errcode(status);
       map->current = size;
       if (map->filesize < size)
         map->filesize = size;
@@ -30107,11 +30056,11 @@ int osal_mresize(const int flags, osal_mmap_t *map, size_t size, size_t limit) {
     if (status == (NTSTATUS) /* STATUS_CONFLICTING_ADDRESSES */ 0xC0000018)
       return MDBX_UNABLE_EXTEND_MAPSIZE;
     if (!NT_SUCCESS(status))
-      return ntstatus2errcode(status);
+      return osal_ntstatus2errcode(status);
 
     status = NtFreeVirtualMemory(GetCurrentProcess(), &BaseAddress, &RegionSize, MEM_RELEASE);
     if (!NT_SUCCESS(status))
-      return ntstatus2errcode(status);
+      return osal_ntstatus2errcode(status);
   }
 
   /* Windows unable:
@@ -30131,7 +30080,7 @@ int osal_mresize(const int flags, osal_mmap_t *map, size_t size, size_t limit) {
   MDBX_ASAN_UNPOISON_MEMORY_REGION(map->base, map->limit);
   status = NtUnmapViewOfSection(GetCurrentProcess(), map->base);
   if (!NT_SUCCESS(status))
-    return ntstatus2errcode(status);
+    return osal_ntstatus2errcode(status);
   status = NtClose(map->section);
   map->section = nullptr;
   PVOID ReservedAddress = nullptr;
@@ -30139,7 +30088,7 @@ int osal_mresize(const int flags, osal_mmap_t *map, size_t size, size_t limit) {
 
   if (!NT_SUCCESS(status)) {
   bailout_ntstatus:
-    err = ntstatus2errcode(status);
+    err = osal_ntstatus2errcode(status);
     map->base = nullptr;
     map->current = map->limit = 0;
     if (ReservedAddress) {
@@ -31348,8 +31297,7 @@ void osal_ctor(void) {
 
 void osal_dtor(void) {}
 /// \copyright SPDX-License-Identifier: Apache-2.0
-/// \author Леонид Юрьев aka Leonid Yuriev <leo@yuriev.ru> \date 2015-2025
-
+/// \author Леонид Юрьев aka Leonid Yuriev <leo@yuriev.ru> \date 2015-2026
 
 __cold int MDBX_PRINTF_ARGS(2, 3) bad_page(const page_t *mp, const char *fmt, ...) {
   if (LOG_ENABLED(MDBX_LOG_ERROR)) {
@@ -31831,8 +31779,7 @@ pgr_t page_get_large(const MDBX_cursor *const mc, const pgno_t pgno, const txnid
   return page_get_inline(P_ILL_BITS | P_BRANCH | P_LEAF | P_DUPFIX, mc, pgno, front);
 }
 /// \copyright SPDX-License-Identifier: Apache-2.0
-/// \author Леонид Юрьев aka Leonid Yuriev <leo@yuriev.ru> \date 2015-2025
-
+/// \author Леонид Юрьев aka Leonid Yuriev <leo@yuriev.ru> \date 2015-2026
 
 int iov_init(MDBX_txn *const txn, iov_ctx_t *ctx, size_t items, size_t npages, mdbx_filehandle_t fd,
              bool check_coherence) {
@@ -31916,19 +31863,22 @@ static void iov_callback4dirtypages(iov_ctx_t *ctx, size_t offset, void *data, s
 #ifndef MDBX_FORCE_CHECK_MMAP_COHERENCY
 #define MDBX_FORCE_CHECK_MMAP_COHERENCY 0
 #endif /* MDBX_FORCE_CHECK_MMAP_COHERENCY */
-    if ((MDBX_FORCE_CHECK_MMAP_COHERENCY || ctx->coherency_timestamp != UINT64_MAX) &&
-        unlikely(memcmp(wp, rp, bytes))) {
-      ctx->coherency_timestamp = 0;
-      env->lck->pgops.incoherence.weak =
-          (env->lck->pgops.incoherence.weak >= INT32_MAX) ? INT32_MAX : env->lck->pgops.incoherence.weak + 1;
-      WARNING("catch delayed/non-arrived page %" PRIaPGNO " %s", wp->pgno,
-              "(workaround for incoherent flaw of unified page/buffer cache)");
-      do
-        if (coherency_timeout(&ctx->coherency_timestamp, wp->pgno, env) != MDBX_RESULT_TRUE) {
-          ctx->err = MDBX_PROBLEM;
-          break;
-        }
-      while (unlikely(memcmp(wp, rp, bytes)));
+    if ((MDBX_FORCE_CHECK_MMAP_COHERENCY || unlikely(ctx->coherency_timestamp != UINT64_MAX))) {
+      VALGRIND_MAKE_MEM_DEFINED(wp, bytes);
+      MDBX_ASAN_UNPOISON_MEMORY_REGION(wp, bytes);
+      if (unlikely(memcmp(wp, rp, bytes))) {
+        ctx->coherency_timestamp = 0;
+        env->lck->pgops.incoherence.weak =
+            (env->lck->pgops.incoherence.weak >= INT32_MAX) ? INT32_MAX : env->lck->pgops.incoherence.weak + 1;
+        WARNING("catch delayed/non-arrived page %" PRIaPGNO " %s", wp->pgno,
+                "(workaround for incoherent flaw of unified page/buffer cache)");
+        do
+          if (coherency_timeout(&ctx->coherency_timestamp, wp->pgno, env) != MDBX_RESULT_TRUE) {
+            ctx->err = MDBX_PROBLEM;
+            break;
+          }
+        while (unlikely(memcmp(wp, rp, bytes)));
+      }
     }
   }
 
@@ -32015,8 +31965,7 @@ int iov_page(MDBX_txn *txn, iov_ctx_t *ctx, page_t *dp, size_t npages) {
   return MDBX_SUCCESS;
 }
 /// \copyright SPDX-License-Identifier: Apache-2.0
-/// \author Леонид Юрьев aka Leonid Yuriev <leo@yuriev.ru> \date 2015-2025
-
+/// \author Леонид Юрьев aka Leonid Yuriev <leo@yuriev.ru> \date 2015-2026
 
 static inline tree_t *outer_tree(MDBX_cursor *mc) {
   cASSERT(mc, (mc->flags & z_inner) != 0);
@@ -32758,8 +32707,7 @@ size_t page_subleaf2_reserve(const MDBX_env *env, size_t host_page_room, size_t 
   return reserve + (subpage_len & 1);
 }
 /// \copyright SPDX-License-Identifier: Apache-2.0
-/// \author Леонид Юрьев aka Leonid Yuriev <leo@yuriev.ru> \date 2015-2025
-
+/// \author Леонид Юрьев aka Leonid Yuriev <leo@yuriev.ru> \date 2015-2026
 
 pnl_t pnl_alloc(size_t size) {
   size_t bytes = pnl_size2bytes(size);
@@ -32993,8 +32941,7 @@ __hot __noinline size_t pnl_search_nochk(const pnl_t pnl, pgno_t pgno) {
   return it - begin + 1;
 }
 /// \copyright SPDX-License-Identifier: Apache-2.0
-/// \author Леонид Юрьев aka Leonid Yuriev <leo@yuriev.ru> \date 2015-2025
-
+/// \author Леонид Юрьев aka Leonid Yuriev <leo@yuriev.ru> \date 2015-2026
 
 #if MDBX_ENABLE_REFUND
 static void refund_reclaimed(MDBX_txn *txn) {
@@ -33204,8 +33151,7 @@ bool txn_refund(MDBX_txn *txn) {
 
 #endif /* MDBX_ENABLE_REFUND */
 /// \copyright SPDX-License-Identifier: Apache-2.0
-/// \author Леонид Юрьев aka Leonid Yuriev <leo@yuriev.ru> \date 2015-2025
-
+/// \author Леонид Юрьев aka Leonid Yuriev <leo@yuriev.ru> \date 2015-2026
 
 void spill_remove(MDBX_txn *txn, size_t idx, size_t npages) {
   tASSERT(txn, idx > 0 && idx <= MDBX_PNL_GETSIZE(txn->tw.spilled.list) && txn->tw.spilled.least_removed > 0);
@@ -33634,8 +33580,7 @@ done:
              : MDBX_TXN_FULL;
 }
 /// \copyright SPDX-License-Identifier: Apache-2.0
-/// \author Леонид Юрьев aka Leonid Yuriev <leo@yuriev.ru> \date 2015-2025
-
+/// \author Леонид Юрьев aka Leonid Yuriev <leo@yuriev.ru> \date 2015-2026
 
 int tbl_setup(const MDBX_env *env, volatile kvx_t *const kvx, const tree_t *const db) {
   osal_memory_fence(mo_AcquireRelease, false);
@@ -33740,8 +33685,7 @@ int tbl_fetch(MDBX_txn *txn, size_t dbi) {
   return MDBX_SUCCESS;
 }
 /// \copyright SPDX-License-Identifier: Apache-2.0
-/// \author Леонид Юрьев aka Leonid Yuriev <leo@yuriev.ru> \date 2015-2025
-
+/// \author Леонид Юрьев aka Leonid Yuriev <leo@yuriev.ru> \date 2015-2026
 
 typedef struct rthc_entry {
   MDBX_env *env;
@@ -34113,25 +34057,27 @@ __cold static int rthc_drown(MDBX_env *const env) {
   int rc = MDBX_SUCCESS;
   MDBX_env *inprocess_neighbor = nullptr;
   if (likely(env->lck_mmap.lck && current_pid == env->pid)) {
-    reader_slot_t *const begin = &env->lck_mmap.lck->rdt[0];
-    reader_slot_t *const end = &env->lck_mmap.lck->rdt[env->max_readers];
-    TRACE("== %s env %p pid %d, readers %p ...%p, current-pid %d", (current_pid == env->pid) ? "cleanup" : "skip",
-          __Wpedantic_format_voidptr(env), env->pid, __Wpedantic_format_voidptr(begin), __Wpedantic_format_voidptr(end),
-          current_pid);
-    bool cleaned = false;
-    for (reader_slot_t *r = begin; r < end; ++r) {
-      if (atomic_load32(&r->pid, mo_Relaxed) == current_pid) {
-        atomic_store32(&r->pid, 0, mo_AcquireRelease);
-        TRACE("== cleanup %p", __Wpedantic_format_voidptr(r));
-        cleaned = true;
-      }
-    }
-    if (cleaned)
-      atomic_store32(&env->lck_mmap.lck->rdt_refresh_flag, true, mo_Relaxed);
     rc = rthc_uniq_check(&env->lck_mmap, &inprocess_neighbor);
-    if (!inprocess_neighbor && env->registered_reader_pid && env->lck_mmap.fd != INVALID_HANDLE_VALUE) {
-      int err = lck_rpid_clear(env);
-      rc = rc ? rc : err;
+    if (!inprocess_neighbor) {
+      reader_slot_t *const begin = &env->lck_mmap.lck->rdt[0];
+      reader_slot_t *const end = &env->lck_mmap.lck->rdt[env->max_readers];
+      TRACE("== %s env %p pid %d, readers %p ...%p, current-pid %d", (current_pid == env->pid) ? "cleanup" : "skip",
+            __Wpedantic_format_voidptr(env), env->pid, __Wpedantic_format_voidptr(begin),
+            __Wpedantic_format_voidptr(end), current_pid);
+      bool cleaned = false;
+      for (reader_slot_t *r = begin; r < end; ++r) {
+        if (atomic_load32(&r->pid, mo_Relaxed) == current_pid) {
+          atomic_store32(&r->pid, 0, mo_AcquireRelease);
+          TRACE("== cleanup %p", __Wpedantic_format_voidptr(r));
+          cleaned = true;
+        }
+      }
+      if (cleaned)
+        atomic_store32(&env->lck_mmap.lck->rdt_refresh_flag, true, mo_Relaxed);
+      if (env->registered_reader_pid && env->lck_mmap.fd != INVALID_HANDLE_VALUE) {
+        int err = lck_rpid_clear(env);
+        rc = rc ? rc : err;
+      }
     }
   }
   int err = lck_destroy(env, inprocess_neighbor, current_pid);
@@ -34253,7 +34199,9 @@ __cold void rthc_dtor(const uint32_t current_pid) {
     MDBX_env *const env = rthc_table[i].env;
     if (env->pid != current_pid)
       continue;
-    if (!(env->flags & ENV_TXKEY))
+    if (!env->lck_mmap.lck || env->lck_mmap.base == MAP_FAILED)
+      continue;
+    if (!(env->flags & ENV_TXKEY) || !env->lck_mmap.lck)
       continue;
     env->flags -= ENV_TXKEY;
     reader_slot_t *const begin = &env->lck_mmap.lck->rdt[0];
@@ -34292,8 +34240,7 @@ __cold void rthc_dtor(const uint32_t current_pid) {
 /// \copyright SPDX-License-Identifier: Apache-2.0
 /// \note Please refer to the COPYRIGHT file for explanations license change,
 /// credits and acknowledgments.
-/// \author Леонид Юрьев aka Leonid Yuriev <leo@yuriev.ru> \date 2015-2025
-
+/// \author Леонид Юрьев aka Leonid Yuriev <leo@yuriev.ru> \date 2015-2026
 
 static MDBX_cursor *cursor_clone(const MDBX_cursor *csrc, cursor_couple_t *couple) {
   cASSERT(csrc, csrc->txn->txnid >= csrc->txn->env->lck->cached_oldest.weak);
@@ -35845,8 +35792,7 @@ int tree_propagate_key(MDBX_cursor *mc, const MDBX_val *key) {
 /// \copyright SPDX-License-Identifier: Apache-2.0
 /// \note Please refer to the COPYRIGHT file for explanations license change,
 /// credits and acknowledgments.
-/// \author Леонид Юрьев aka Leonid Yuriev <leo@yuriev.ru> \date 2015-2025
-
+/// \author Леонид Юрьев aka Leonid Yuriev <leo@yuriev.ru> \date 2015-2026
 
 /* Search for the lowest key under the current branch page.
  * This just bypasses a numkeys check in the current page
@@ -35982,8 +35928,7 @@ __hot __noinline int tree_search_finalize(MDBX_cursor *mc, const MDBX_val *key, 
   return MDBX_SUCCESS;
 }
 /// \copyright SPDX-License-Identifier: Apache-2.0
-/// \author Леонид Юрьев aka Leonid Yuriev <leo@yuriev.ru> \date 2015-2025
-
+/// \author Леонид Юрьев aka Leonid Yuriev <leo@yuriev.ru> \date 2015-2026
 
 static inline size_t txl_size2bytes(const size_t size) {
   assert(size > 0 && size <= txl_max * 2);
@@ -36080,8 +36025,7 @@ __hot bool txl_contain(const txl_t txl, txnid_t id) {
   return false;
 }
 /// \copyright SPDX-License-Identifier: Apache-2.0
-/// \author Леонид Юрьев aka Leonid Yuriev <leo@yuriev.ru> \date 2015-2025
-
+/// \author Леонид Юрьев aka Leonid Yuriev <leo@yuriev.ru> \date 2015-2026
 
 __hot txnid_t txn_snapshot_oldest(const MDBX_txn *const txn) {
   return mvcc_shapshot_oldest(txn->env, txn->tw.troika.txnid[txn->tw.troika.prefer_steady]);
@@ -36161,7 +36105,8 @@ void txn_merge(MDBX_txn *const parent, MDBX_txn *const txn, const size_t parent_
                         (parent->parent ? parent->parent->tw.dirtyroom : parent->env->options.dp_limit));
   }
 
-  /* Remove reclaimed pages from parent's dirty list */
+  /* Remove reclaimed pages from parent's dirty list.
+   * Here the nested->tw.repnl was already moved into parent->tw.repnl ans space was reserved via retired_delta. */
   const pnl_t reclaimed_list = parent->tw.repnl;
   dpl_sift(parent, reclaimed_list, false);
 
@@ -36217,6 +36162,7 @@ void txn_merge(MDBX_txn *const parent, MDBX_txn *const txn, const size_t parent_
 
     DEBUG("reclaim retired parent's %u -> %zu %s page %" PRIaPGNO, npages, l, kind, pgno);
     int err = pnl_insert_span(&parent->tw.repnl, pgno, l);
+    /* The space for additions to parent->tw.repnl was already reserverd via the retired_delta. */
     ENSURE(txn->env, err == MDBX_SUCCESS);
   }
   MDBX_PNL_SETSIZE(parent->tw.retired_pages, w);
@@ -37010,6 +36956,9 @@ int txn_end(MDBX_txn *txn, unsigned mode) {
       eASSERT(env, pnl_check_allocated(txn->tw.repnl, txn->geo.first_unallocated - MDBX_ENABLE_REFUND));
       eASSERT(env, memcmp(&txn->tw.troika, &parent->tw.troika, sizeof(troika_t)) == 0);
 
+      if ((mode & TXN_END_UPDATE) == 0)
+        dbi_update(txn, false);
+
       txn->owner = 0;
       if (txn->tw.gc.retxl) {
         eASSERT(env, MDBX_PNL_GETSIZE(txn->tw.gc.retxl) >= (uintptr_t)parent->tw.gc.retxl);
@@ -37162,8 +37111,7 @@ int txn_unpark(MDBX_txn *txn) {
   return err ? err : MDBX_OUSTED;
 }
 /// \copyright SPDX-License-Identifier: Apache-2.0
-/// \author Леонид Юрьев aka Leonid Yuriev <leo@yuriev.ru> \date 2015-2025
-
+/// \author Леонид Юрьев aka Leonid Yuriev <leo@yuriev.ru> \date 2015-2026
 
 MDBX_MAYBE_UNUSED MDBX_NOTHROW_CONST_FUNCTION unsigned log2n_powerof2(size_t value_uintptr) {
   assert(value_uintptr > 0 && value_uintptr < INT32_MAX && is_powerof2(value_uintptr));
@@ -37193,8 +37141,7 @@ MDBX_NOTHROW_CONST_FUNCTION uint64_t rrxmrrxmsx_0(uint64_t v) {
   return v ^ v >> 28;
 }
 /// \copyright SPDX-License-Identifier: Apache-2.0
-/// \author Леонид Юрьев aka Leonid Yuriev <leo@yuriev.ru> \date 2015-2025
-
+/// \author Леонид Юрьев aka Leonid Yuriev <leo@yuriev.ru> \date 2015-2026
 
 typedef struct walk_ctx {
   void *userctx;
@@ -37482,10 +37429,9 @@ __cold int walk_pages(MDBX_txn *txn, walk_func *visitor, void *user, walk_option
   return rc;
 }
 /// \copyright SPDX-License-Identifier: Apache-2.0
-/// \author Леонид Юрьев aka Leonid Yuriev <leo@yuriev.ru> \date 2015-2025
+/// \author Леонид Юрьев aka Leonid Yuriev <leo@yuriev.ru> \date 2015-2026
 
 #if defined(_WIN32) || defined(_WIN64)
-
 
 //------------------------------------------------------------------------------
 // Stub for slim read-write lock
@@ -37635,7 +37581,6 @@ void windows_import(void) {
 /* This is CMake-template for libmdbx's version.c
  ******************************************************************************/
 
-
 #if MDBX_VERSION_MAJOR != 0 || MDBX_VERSION_MINOR != 13
 #error "API version mismatch! Had `git fetch --tags` done?"
 #endif
@@ -37656,11 +37601,11 @@ __dll_export
     const struct MDBX_version_info mdbx_version = {
         0,
         13,
-        8,
-        12,
+        11,
+        2,
         "", /* pre-release suffix of SemVer
-                                        0.13.8.12 */
-        {"2025-10-18T14:38:06+03:00", "f1100efd0ca065b845050fffedbc8a92050f156a", "7a6a4eae8d2c6d7b1e3009d1bf3f6f08ea5c4c8c", "v0.13.8-12-g7a6a4eae"},
+                                        0.13.11.2 */
+        {"2026-02-10T15:44:23+03:00", "6c6246e4db75b4380b96067073d2ce2449a500d6", "ea86a7d37821a8187c8cd39b61e1de030cfa39c8", "v0.13.11-2-gea86a7d3"},
         sourcery};
 
 __dll_export

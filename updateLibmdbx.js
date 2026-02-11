@@ -2,7 +2,8 @@ const { execSync } = require('child_process');
 const { join } = require('path');
 const { existsSync, mkdirSync, rmSync, cpSync } = require('fs');
 
-const cwd = './.local';
+const baseDir = './.local';
+let cwd = baseDir;
 const out = './libmdbx';
 
 if (existsSync(cwd)) {
@@ -11,17 +12,30 @@ if (existsSync(cwd)) {
 
 mkdirSync(cwd);
 
-execSync("git clone --branch stable https://gitflic.ru/project/erthink/libmdbx.git .", { cwd, stdio: 'inherit' });
-execSync("make dist", { cwd, stdio: 'inherit' });
+execSync("git clone --depth 1 --branch stable https://gitflic.ru/project/erthink/libmdbx.git .", { cwd, stdio: 'inherit' });
 
-console.log('Applying patches... (mdbx-read-txn-metrics.patch)')
-execSync("git apply ../patches/mdbx-read-txn-metrics.patch", { cwd, stdio: 'inherit' });
+if (!existsSync(join(cwd, 'VERSION.json'))) {
+    execSync("make dist", { cwd, stdio: 'inherit' });
+    cwd = join(cwd, 'dist');
+}
+
+const patches = [
+    'mdbx-read-txn-metrics.patch',
+    'mdbx-tools-load-max-batch-txn.patch'
+];
+
+console.log('Applying patches...')
+for (const patch of patches) {
+    console.log('PATCH:', patch);
+    execSync(`git apply ../patches/${patch}`, { cwd, stdio: 'inherit' });
+}
+
 
 if (existsSync(out)) {
     rmSync(out, { recursive: true });
     mkdirSync(out);
 }
 
-cpSync(join(cwd, 'dist'), out, { recursive: true });
+cpSync(cwd, out, { recursive: true });
 
-rmSync(cwd, { recursive: true });
+rmSync(baseDir, { recursive: true });

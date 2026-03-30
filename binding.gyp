@@ -10,6 +10,7 @@
         'MDBX_BUILD_FLAGS_CONFIG="Removed by GYP"', # Disable MDBX warning: Build flags undefined. Please use correct build script
         'NDEBUG', # disable assertions
         'MDBX_ENABLE_PROFGC',
+        'MDBX_ENABLE_PGET_STAT',
         # 'MDBX_DEBUG=1',
         # 'MDBX_FORCE_ASSERTIONS=1',
       ]
@@ -62,6 +63,15 @@
       "dependencies": [ "libmdbx" ],
       "sources": [
         "libmdbx/mdbx_copy.c",
+      ],
+      "include_dirs": [ "libmdbx" ],
+    },
+    {
+      "target_name": "mdbx_defrag",
+      "type": "executable",
+      "dependencies": [ "libmdbx" ],
+      "sources": [
+        "libmdbx/mdbx_defrag.c",
       ],
       "include_dirs": [ "libmdbx" ],
     },

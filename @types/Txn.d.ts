@@ -19,7 +19,7 @@ declare module '../index' {
         space_retired: number;
         space_leftover: number;
         space_dirty: number;
-        pages_read: number;
+        txn_pget: number;
     }
 
     interface GcProfilingInfo {

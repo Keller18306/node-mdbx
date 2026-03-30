@@ -14,7 +14,7 @@ declare module '../index' {
         spill_max_denominator,
         spill_min_denominator,
         spill_parent4child_denominator,
-        merge_threshold_16dot16_percent,
+        merge_threshold,
         writethrough_threshold,
         prefault_write_enable,
         gc_time_limit,
@@ -23,5 +23,6 @@ declare module '../index' {
         subpage_room_threshold,
         subpage_reserve_prereq,
         subpage_reserve_limit,
+        split_reserve,
     }
 }

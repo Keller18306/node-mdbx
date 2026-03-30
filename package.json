@@ -19,6 +19,7 @@
   "bin": {
     "mdbx_chk": "./build/Release/mdbx_chk",
     "mdbx_copy": "./build/Release/mdbx_copy",
+    "mdbx_defrag": "./build/Release/mdbx_defrag",
     "mdbx_drop": "./build/Release/mdbx_drop",
     "mdbx_dump": "./build/Release/mdbx_dump",
     "mdbx_load": "./build/Release/mdbx_load",
@@ -27,6 +28,7 @@
   "man": [
     "./libmdbx/man1/mdbx_chk.1",
     "./libmdbx/man1/mdbx_copy.1",
+    "./libmdbx/man1/mdbx_defrag.1",
     "./libmdbx/man1/mdbx_drop.1",
     "./libmdbx/man1/mdbx_dump.1",
     "./libmdbx/man1/mdbx_load.1",

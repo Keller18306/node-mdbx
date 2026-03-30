@@ -32,7 +32,7 @@ void MDBX_Native_Debug::Init(Napi::Env env, Napi::Object exports) { exports.Set(
 void MDBX_Native_Debug::Setup(const Napi::CallbackInfo &info) {
 	int flags = MDBX_DBG_NONE;
 	MDBX_log_level_t log_level = MDBX_LOG_DONTCHANGE;
-	MDBX_debug_func *logger = nullptr;
+	MDBX_debug_func logger = nullptr;
 
 	Napi::Object options = info[0].ToObject();
 
@@ -43,7 +43,7 @@ void MDBX_Native_Debug::Setup(const Napi::CallbackInfo &info) {
 
 	if (options.Get("logger").IsBoolean() && options.Get("logger").ToBoolean().Value()) {
 		// Сохраняем JavaScript функцию в глобальной ссылке
-		logger = &Logger;
+		logger = Logger;
 		log_level = MDBX_LOG_EXTRA;
 	}
 

@@ -3,6 +3,15 @@
 	"tasks": [
 		{
 			"type": "npm",
+			"script": "configure",
+			"group": {
+				"kind": "build",
+			},
+			"problemMatcher": [],
+			"label": "npm: configure",
+		},
+		{
+			"type": "npm",
 			"script": "build:dev",
 			"group": {
 				"kind": "build",
@@ -10,7 +19,9 @@
 			},
 			"problemMatcher": [],
 			"label": "npm: build:dev",
-			"detail": "node-gyp -j 16 build --debug"
+			"dependsOn": [
+				"npm: configure"
+			]
 		}
 	]
 }

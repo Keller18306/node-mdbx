@@ -15,7 +15,7 @@ void MDBX_Native_Options::Init(Napi::Env env, Napi::Object exports) {
 	opt.Set("spill_max_denominator", static_cast<int>(MDBX_opt_spill_max_denominator));
 	opt.Set("spill_min_denominator", static_cast<int>(MDBX_opt_spill_min_denominator));
 	opt.Set("spill_parent4child_denominator", static_cast<int>(MDBX_opt_spill_parent4child_denominator));
-	opt.Set("merge_threshold_16dot16_percent", static_cast<int>(MDBX_opt_merge_threshold_16dot16_percent));
+	opt.Set("merge_threshold", static_cast<int>(MDBX_opt_merge_threshold));
 	opt.Set("writethrough_threshold", static_cast<int>(MDBX_opt_writethrough_threshold));
 	opt.Set("prefault_write_enable", static_cast<int>(MDBX_opt_prefault_write_enable));
 	opt.Set("gc_time_limit", static_cast<int>(MDBX_opt_gc_time_limit));
@@ -24,6 +24,7 @@ void MDBX_Native_Options::Init(Napi::Env env, Napi::Object exports) {
 	opt.Set("subpage_room_threshold", static_cast<int>(MDBX_opt_subpage_room_threshold));
 	opt.Set("subpage_reserve_prereq", static_cast<int>(MDBX_opt_subpage_reserve_prereq));
 	opt.Set("subpage_reserve_limit", static_cast<int>(MDBX_opt_subpage_reserve_limit));
+	opt.Set("split_reserve", static_cast<int>(MDBX_opt_split_reserve));
 
 	exports.Set("Options", opt);
 }

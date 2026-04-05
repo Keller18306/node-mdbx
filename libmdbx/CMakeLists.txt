@@ -5,7 +5,7 @@
 # open-source code. MDBX has a specific set of properties and capabilities, focused on creating unique lightweight
 # solutions.  Please visit https://libmdbx.dqdkfa.ru for more information, changelog, documentation, C++ API description
 # and links to the original git repo with the source code.  Questions, feedback and suggestions are welcome to the
-# Telegram' group https://t.me/libmdbx.
+# Telegram' group https://t.me/libmdbx, MAX' chat https://max.ru/join/dKckvyuARxp1vRK-wnPur8zYCEkbR3OUOmpPWkWxp78.
 #
 # The libmdbx code will forever remain open and with high-quality free support, as far as the life circumstances of the
 # project participants allow. Donations are welcome to ETH `0xD104d8f8B2dC312aaD74899F83EBf3EEBDC1EA3A`,
@@ -529,26 +529,36 @@ if(DEFINED MDBX_FORCE_ASSERTIONS)
   endif()
 endif()
 
-if(NOT DEFINED MDBX_CHECKING OR MDBX_CHECKING STREQUAL "OFF")
+if(NOT DEFINED MDBX_CHECKING)
+  if(CMAKE_BUILD_TYPE_UPPERCASE STREQUAL "DEBUG")
+    set(MDBX_CHECKING 2)
+  else()
+    set(MDBX_CHECKING 0)
+  endif()
+elseif(MDBX_CHECKING STREQUAL "OFF")
   set(MDBX_CHECKING 0)
-elseif(NOT MDBX_CHECKING MATCHES "^(-1|0|1|2|3|ON)$")
+elseif(MDBX_CHECKING STREQUAL "ON")
+  set(MDBX_CHECKING 2)
+elseif(NOT MDBX_CHECKING MATCHES "^(-1|0|1|2|3)$")
   message(
     FATAL_ERROR
       "The `MDBX_CHECKING` should defined as an integer number in range -1..3, the given value `MDBX_CHECKING=${MDBX_CHECKING}` is invalid."
   )
-elseif(MDBX_CHECKING STREQUAL "ON")
-  set(MDBX_CHECKING 2)
 endif()
 
 if(NOT DEFINED MDBX_DEBUG OR MDBX_DEBUG STREQUAL "OFF")
-  set(MDBX_DEBUG 0)
-elseif(NOT MDBX_DEBUG MATCHES "^(-1|0|1|2|3|ON)$")
+  if(CMAKE_BUILD_TYPE_UPPERCASE STREQUAL "DEBUG")
+    set(MDBX_DEBUG 1)
+  else()
+    set(MDBX_DEBUG 0)
+  endif()
+elseif(MDBX_DEBUG STREQUAL "ON")
+  set(MDBX_DEBUG 2)
+elseif(NOT MDBX_DEBUG MATCHES "^(-1|0|1|2|3)$")
   message(
     FATAL_ERROR
       "The `MDBX_DEBUG` should defined as an integer number in range -1..3, the given value `MDBX_DEBUG=${MDBX_DEBUG}` is invalid."
   )
-elseif(MDBX_DEBUG STREQUAL "ON")
-  set(MDBX_DEBUG 1)
 endif()
 
 if((MDBX_BUILD_TOOLS OR MDBX_ENABLE_TESTS) AND MDBX_BUILD_SHARED_LIBRARY)

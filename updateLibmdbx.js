@@ -12,7 +12,7 @@ if (existsSync(cwd)) {
 
 mkdirSync(cwd);
 
-execSync("git clone --depth 1 --branch stable https://gitflic.ru/project/erthink/libmdbx.git .", { cwd, stdio: 'inherit' });
+execSync("git clone --depth 1 --branch master https://git@git.sourcecraft.dev/dqdkfa/libmdbx.git .", { cwd, stdio: 'inherit' });
 
 if (!existsSync(join(cwd, 'VERSION.json'))) {
     execSync("make dist", { cwd, stdio: 'inherit' });

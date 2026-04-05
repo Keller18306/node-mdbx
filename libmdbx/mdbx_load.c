@@ -1,10 +1,10 @@
-/* This file is part of the libmdbx amalgamated source code (v0.14.1-521-gb2ff247e at 2026-03-30T18:07:04+03:00).
+/* This file is part of the libmdbx amalgamated source code (v0.14.1-535-g2ea4d615 at 2026-04-04T21:15:47+03:00).
  *
  * libmdbx (aka MDBX) is an extremely fast, compact, powerful, embeddedable, transactional key-value storage engine with
  * open-source code. MDBX has a specific set of properties and capabilities, focused on creating unique lightweight
  * solutions.  Please visit https://libmdbx.dqdkfa.ru for more information, changelog, documentation, C++ API description
  * and links to the original git repo with the source code.  Questions, feedback and suggestions are welcome to the
- * Telegram' group https://t.me/libmdbx.
+ * Telegram' group https://t.me/libmdbx, MAX' chat https://max.ru/join/dKckvyuARxp1vRK-wnPur8zYCEkbR3OUOmpPWkWxp78.
  *
  * The libmdbx code will forever remain open and with high-quality free support, as far as the life circumstances of the
  * project participants allow. Donations are welcome to ETH `0xD104d8f8B2dC312aaD74899F83EBf3EEBDC1EA3A`,
@@ -152,10 +152,10 @@ typedef struct flagbit {
 
 #define S(s) STRLENOF(s), s
 
-flagbit dbflags[] = {{MDBX_REVERSEKEY, S("reversekey")}, {MDBX_DUPSORT, S("duplicates")},
-                     {MDBX_DUPSORT, S("dupsort")},       {MDBX_INTEGERKEY, S("integerkey")},
-                     {MDBX_DUPFIXED, S("dupfix")},       {MDBX_INTEGERDUP, S("integerdup")},
-                     {MDBX_REVERSEDUP, S("reversedup")}, {0, 0, nullptr}};
+static const flagbit dbflags[] = {{MDBX_REVERSEKEY, S("reversekey")}, {MDBX_DUPSORT, S("duplicates")},
+                                  {MDBX_DUPSORT, S("dupsort")},       {MDBX_INTEGERKEY, S("integerkey")},
+                                  {MDBX_DUPFIXED, S("dupfix")},       {MDBX_INTEGERDUP, S("integerdup")},
+                                  {MDBX_REVERSEDUP, S("reversedup")}, {0, 0, nullptr}};
 
 static int readhdr(void) {
   /* reset parameters */
@@ -513,7 +513,7 @@ int main(int argc, char *argv[]) {
   int envflags = MDBX_SAFE_NOSYNC | MDBX_ACCEDE, putflags = MDBX_UPSERT;
   bool rescue = false;
   bool purge = false;
-  unsigned desity_percent = 100;
+  unsigned density_percent = 100;
   bool override_geometry = false;
   intptr_t geometry_pagesize = -1;
   intptr_t geometry_lower = -1;
@@ -600,7 +600,7 @@ int main(int argc, char *argv[]) {
       }
       break;
     case 'd':
-      if (sscanf(optarg, "%u", &desity_percent) != 1 || desity_percent < 50 || desity_percent > 100) {
+      if (sscanf(optarg, "%u", &density_percent) != 1 || density_percent < 50 || density_percent > 100) {
         if (!quiet)
           fprintf(stderr, "%s: %s option: expecting %s, but got '%s'\n", prog, "-d",
                   "unsigned integer value in range between 50 and 100", optarg);
@@ -612,7 +612,7 @@ int main(int argc, char *argv[]) {
                  &geometry_pagesize) != 5) {
         if (!quiet)
           fprintf(stderr, "%s: %s option: expecting %s, but got '%s'\n", prog, "-G",
-                  "five numbers delimitied by a colon", optarg);
+                  "five numbers delimited by a colon", optarg);
         return EXIT_FAILURE;
       }
       override_geometry = true;
@@ -720,7 +720,7 @@ int main(int argc, char *argv[]) {
     goto bailout;
   }
 
-  err = mdbx_env_set_option(env, MDBX_opt_split_reserve, 65536u * (100u - desity_percent) / 100u);
+  err = mdbx_env_set_option(env, MDBX_opt_split_reserve, 65536u * (100u - density_percent) / 100u);
   if (unlikely(err != MDBX_SUCCESS)) {
     error("mdbx_env_set_option.split_reserve", err);
     goto bailout;

@@ -1,10 +1,10 @@
-/* This file is part of the libmdbx amalgamated source code (v0.14.1-521-gb2ff247e at 2026-03-30T18:07:04+03:00).
+/* This file is part of the libmdbx amalgamated source code (v0.14.1-535-g2ea4d615 at 2026-04-04T21:15:47+03:00).
  *
  * libmdbx (aka MDBX) is an extremely fast, compact, powerful, embeddedable, transactional key-value storage engine with
  * open-source code. MDBX has a specific set of properties and capabilities, focused on creating unique lightweight
  * solutions.  Please visit https://libmdbx.dqdkfa.ru for more information, changelog, documentation, C++ API description
  * and links to the original git repo with the source code.  Questions, feedback and suggestions are welcome to the
- * Telegram' group https://t.me/libmdbx.
+ * Telegram' group https://t.me/libmdbx, MAX' chat https://max.ru/join/dKckvyuARxp1vRK-wnPur8zYCEkbR3OUOmpPWkWxp78.
  *
  * The libmdbx code will forever remain open and with high-quality free support, as far as the life circumstances of the
  * project participants allow. Donations are welcome to ETH `0xD104d8f8B2dC312aaD74899F83EBf3EEBDC1EA3A`,
@@ -17782,42 +17782,37 @@ __hot static int defrag_provide_span(dfc_t *const dfc, const size_t npages) {
   memset(dfc->cache_cost, 0, sizeof(dfc->cache_cost));
   size_t best_begin = MAX_PAGENO, best_cost = len;
 #if MDBX_PNL_ASCENDING
-#error "FIXME"
+#error "FIXME: Since 2026-04-01 alternatives to MDBX_PNL_ASCENDING = 0 are no longer supported."
 #else
   for (size_t span, i = len; i > 0 && pnl[i] <= dfc->defrag_enough - npages;) {
-    for (span = 1; i > span && pnl[i - span] < dfc->defrag_enough && MDBX_PNL_CONTIGUOUS(pnl[i - span], pnl[i], span);
-         ++span)
-      ;
+    span = 1;
+    while (unlikely(MDBX_PNL_CONTIGUOUS(pnl[i - span], pnl[i], span)) &&
+           likely((intptr_t)(i - span) > 0 && pnl[i - span] < dfc->defrag_enough))
+      ++span;
 
-    const pgno_t base = pnl[i];
+    pgno_t begin = pnl[i], end = begin + span;
     i -= span;
-    pgno_t begin = base, end = begin + span;
     size_t cost = 0;
     size_t cost_left = defrag_move_cost(dfc, begin - 1, npages);
     size_t cost_right = defrag_move_cost(dfc, end, npages);
     do {
       if (cost_left < cost_right) {
         cost += cost_left;
-        begin -= 1;
-        cost_left = defrag_move_cost(dfc, begin - 1, npages);
+        cost_left = defrag_move_cost(dfc, --begin - 1, npages);
       } else if (cost_right < INT_MAX) {
         cost += cost_right;
-        end += 1;
-        cost_right = defrag_move_cost(dfc, end, npages);
+        cost_right = defrag_move_cost(dfc, ++end, npages);
       } else {
-        while (!MDBX_PNL_ASCENDING && i > 0 && pnl[i] < end)
+        while (pnl[i] < end && likely(i > 0))
           --i;
-        while (MDBX_PNL_ASCENDING && i <= len && pnl[i] < end)
-          ++i;
         break;
       }
     } while (cost < best_cost && end - begin < npages);
 
-    if (end - begin == npages &&
-        (cost < best_cost || (!MDBX_PNL_ASCENDING && cost == best_cost && begin < best_begin))) {
+    if (unlikely(end - begin == npages && cost < best_cost)) {
       best_cost = cost;
       best_begin = begin;
-      if (!MDBX_PNL_ASCENDING && !best_cost)
+      if (!best_cost)
         break;
     }
   }
@@ -17935,7 +17930,7 @@ int defrag_cycle(dfc_t *dfc) {
     return MDBX_RESULT_TRUE;
   }
 
-#if MDBX_CHECKING > 0
+#if MDBX_CHECKING > 1
   dfc->repnl_clone = pnl_clone(txn->wr.repnl);
 #endif /* MDBX_CHECKING > 0 */
 
@@ -19496,11 +19491,11 @@ __cold int dxb_setup(MDBX_env *env, const int lck_rc, const mdbx_mode_t mode_bit
     if (unlikely(err != MDBX_SUCCESS))
       return err;
 
-#ifndef NDEBUG /* just for checking */
+#if MDBX_CHECKING > 0 || MDBX_DEBUG > 0
     err = dxb_read_header(env, &header, lck_rc, mode_bits);
     if (unlikely(err != MDBX_SUCCESS))
       return err;
-#endif
+#endif /* MDBX_CHECKING > 0 || MDBX_DEBUG > 0 */
   }
 
   VERBOSE("header: root %" PRIaPGNO "/%" PRIaPGNO ", geo %" PRIaPGNO "/%" PRIaPGNO "-%" PRIaPGNO "/%" PRIaPGNO
@@ -20167,14 +20162,14 @@ int dxb_sync_locked(MDBX_env *env, unsigned flags, meta_t *const pending, troika
       /* LY: 'invalidate' the meta. */
       meta_update_begin(env, target, pending->unsafe_txnid);
       unaligned_poke_u64(4, target->sign, DATASIGN_WEAK);
-#ifndef NDEBUG
+#if MDBX_CHECKING > 0 || MDBX_DEBUG > 0
       /* debug: provoke failure to catch a violators, but don't touch pagesize
        * to allow readers catch actual pagesize. */
       void *provoke_begin = &target->trees.gc.root;
       void *provoke_end = &target->sign;
       memset(provoke_begin, 0xCC, ptr_dist(provoke_end, provoke_begin));
       jitter4testing(false);
-#endif
+#endif /* MDBX_CHECKING > 0 || MDBX_DEBUG > 0 */
 
       /* LY: update info */
       target->geometry = pending->geometry;
@@ -21209,7 +21204,7 @@ MDBX_MAYBE_UNUSED __hot MDBX_ATTRIBUTE_TARGET_AVX2 static pgno_t *scan4seq_avx2(
                                                                                 const size_t seq) {
   ASSERT(seq > 0 && len > seq);
 #if MDBX_PNL_ASCENDING
-#error "FIXME: Not implemented"
+#error "FIXME: Since 2026-04-01 alternatives to MDBX_PNL_ASCENDING = 0 are no longer supported."
 #endif /* MDBX_PNL_ASCENDING */
   ASSERT(range[-(ptrdiff_t)len] == len);
   pgno_t *const detent = range - len + seq;
@@ -21275,7 +21270,7 @@ MDBX_MAYBE_UNUSED __hot MDBX_ATTRIBUTE_TARGET_AVX512BW static pgno_t *scan4seq_a
                                                                                         const size_t seq) {
   ASSERT(seq > 0 && len > seq);
 #if MDBX_PNL_ASCENDING
-#error "FIXME: Not implemented"
+#error "FIXME: Since 2026-04-01 alternatives to MDBX_PNL_ASCENDING = 0 are no longer supported."
 #endif /* MDBX_PNL_ASCENDING */
   ASSERT(range[-(ptrdiff_t)len] == len);
   pgno_t *const detent = range - len + seq;
@@ -21350,7 +21345,7 @@ static __always_inline size_t diffcmp2mask_neon(const pgno_t *const ptr, const p
 __hot static pgno_t *scan4seq_neon(pgno_t *range, const size_t len, const size_t seq) {
   ASSERT(seq > 0 && len > seq);
 #if MDBX_PNL_ASCENDING
-#error "FIXME: Not implemented"
+#error "FIXME: Since 2026-04-01 alternatives to MDBX_PNL_ASCENDING = 0 are no longer supported."
 #endif /* MDBX_PNL_ASCENDING */
   ASSERT(range[-(ptrdiff_t)len] == len);
   pgno_t *const detent = range - len + seq;
@@ -23866,10 +23861,10 @@ static void mdbx_fini(void);
 #if defined(_WIN32) || defined(_WIN64)
 
 #if MDBX_BUILD_SHARED_LIBRARY
-#if MDBX_WITHOUT_MSVC_CRT && defined(NDEBUG)
+#if MDBX_WITHOUT_MSVC_CRT && !defined(_DEBUG)
 /* DEBUG/CHECKED builds still require MSVC's CRT for runtime checks.
  *
- * Define dll's entry point only for Release build when NDEBUG is defined and
+ * Define dll's entry point only for Release build when _DEBUG is not defined and
  * MDBX_WITHOUT_MSVC_CRT=ON. if the entry point isn't defined then MSVC's will
  * automatically use DllMainCRTStartup() from CRT library, which also
  * automatically call DllMain() from our mdbx.dll */
@@ -24206,24 +24201,24 @@ __dll_export
     " WORDBITS=" MDBX_STRINGIFY(MDBX_WORDBITS)
     " BYTE_ORDER="
 #if __BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__
-    "LITTLE_ENDIAN"
+    "LE"
 #elif __BYTE_ORDER__ == __ORDER_BIG_ENDIAN__
-    "BIG_ENDIAN"
+    "BE"
 #else
     #error "FIXME: Unsupported byte order"
 #endif /* __BYTE_ORDER__ */
-    " ENABLE_BIGFOOT=" MDBX_STRINGIFY(MDBX_ENABLE_BIGFOOT)
+    " BIGFOOT=" MDBX_STRINGIFY(MDBX_ENABLE_BIGFOOT)
     " ENV_CHECKPID=" MDBX_ENV_CHECKPID_CONFIG
     " TXN_CHECKOWNER=" MDBX_TXN_CHECKOWNER_CONFIG
     " 64BIT_ATOMIC=" MDBX_64BIT_ATOMIC_CONFIG
     " 64BIT_CAS=" MDBX_64BIT_CAS_CONFIG
     " TRUST_RTC=" MDBX_TRUST_RTC_CONFIG
     " AVOID_MSYNC=" MDBX_STRINGIFY(MDBX_AVOID_MSYNC)
-    " ENABLE_REFUND=" MDBX_STRINGIFY(MDBX_ENABLE_REFUND)
-    " USE_MINCORE=" MDBX_STRINGIFY(MDBX_USE_MINCORE)
-    " ENABLE_PGOP_STAT=" MDBX_STRINGIFY(MDBX_ENABLE_PGOP_STAT)
-    " ENABLE_PROFGC=" MDBX_STRINGIFY(MDBX_ENABLE_PROFGC)
-    " ENABLE_PGET_STAT=" MDBX_STRINGIFY(MDBX_ENABLE_PGET_STAT)
+    " REFUND=" MDBX_STRINGIFY(MDBX_ENABLE_REFUND)
+    " MINCORE=" MDBX_STRINGIFY(MDBX_USE_MINCORE)
+    " PGOP_STAT=" MDBX_STRINGIFY(MDBX_ENABLE_PGOP_STAT)
+    " PROFGC=" MDBX_STRINGIFY(MDBX_ENABLE_PROFGC)
+    " PGET_STAT=" MDBX_STRINGIFY(MDBX_ENABLE_PGET_STAT)
 #if MDBX_DISABLE_VALIDATION
     " DISABLE_VALIDATION=YES"
 #endif /* MDBX_DISABLE_VALIDATION */
@@ -24255,15 +24250,17 @@ __dll_export
     " WINVER=" MDBX_STRINGIFY(WINVER)
 #else /* Windows */
     " LOCKING=" MDBX_LOCKING_CONFIG
-    " USE_OFDLOCKS=" MDBX_USE_OFDLOCKS_CONFIG
-    " USE_FALLOCATE=" MDBX_USE_FALLOCATE_CONFIG
+    " OFDLOCKS=" MDBX_USE_OFDLOCKS_CONFIG
+    " FALLOCATE=" MDBX_USE_FALLOCATE_CONFIG
 #endif /* !Windows */
     " CACHELINE_SIZE=" MDBX_STRINGIFY(MDBX_CACHELINE_SIZE)
     " CPU_WRITEBACK_INCOHERENT=" MDBX_STRINGIFY(MDBX_CPU_WRITEBACK_INCOHERENT)
     " MMAP_INCOHERENT_CPU_CACHE=" MDBX_STRINGIFY(MDBX_MMAP_INCOHERENT_CPU_CACHE)
     " MMAP_INCOHERENT_FILE_WRITE=" MDBX_STRINGIFY(MDBX_MMAP_INCOHERENT_FILE_WRITE)
     " UNALIGNED_OK=" MDBX_STRINGIFY(MDBX_UNALIGNED_OK)
+#if MDBX_PNL_ASCENDING
     " PNL_ASCENDING=" MDBX_STRINGIFY(MDBX_PNL_ASCENDING)
+#endif /* MDBX_PNL_ASCENDING */
     ,
 #ifdef MDBX_BUILD_COMPILER
     MDBX_BUILD_COMPILER
@@ -26474,19 +26471,12 @@ __cold void page_list(page_t *mp) {
 
 #if MDBX_CHECKING >= 0
 
-static bool osal_safe_read_uint32(const void *ptr, int32_t *dest) {
-  *dest = 0;
-  /* TODO: FIXME */
-  (void)ptr;
-  return false;
-}
-
 __cold const char *object2class(const void *ptr) {
   if (!ptr)
     return "null";
 
   int32_t snap_signature = 0;
-  if (!osal_safe_read_uint32(ptr, &snap_signature))
+  if (!osal_safe_peek_uint32(ptr, &snap_signature))
     return "bad";
 
   switch (snap_signature) {
@@ -26505,18 +26495,19 @@ __cold const char *object2class(const void *ptr) {
   return "unknown";
 }
 
-MDBX_NORETURN static void panic_kick(const char *msg, const char *func, unsigned line, const void *obj) {
+MDBX_NORETURN static void fuckup(const char *msg, const char *func, unsigned line, const void *obj) {
   const char *obj_class = object2class(obj);
   MDBX_DTRACE5(panic, func, line, msg, obj_class, obj);
   const MDBX_panic_func panic_func = globals.panic_func;
   if (panic_func)
     panic_func(msg, func, line, obj, obj_class);
-  debug_log(MDBX_LOG_FATAL, func, line, "\r\nMDBX-ASSERTION: %s (%s %p)\r\n", msg, obj_class, (void *)obj);
+  debug_log(MDBX_LOG_FATAL, func, line, obj ? "MDBX-ASSERTION: %s (%s %p)\n" : "MDBX-ASSERTION: %s\n", msg, obj_class,
+            (void *)obj);
   osal_panic(msg, func, line);
 }
 
 __cold __noinline void panic_at_obj(const struct MDBX_panic_point *const at, const void *obj) {
-  panic_kick(at->msg, at->function, at->line, obj);
+  fuckup(at->msg, at->function, at->line, obj);
 }
 
 __cold __noinline void panic_at(const struct MDBX_panic_point *const at) { panic_at_obj(at, nullptr); }
@@ -26527,8 +26518,10 @@ __cold __noinline void panic_at_fmt(const struct MDBX_panic_point *const at, con
   char *message = nullptr;
   const int num = osal_vasprintf(&message, obj, ap);
   const char *const const_message = unlikely(num < 1 || !message) ? "<vasprintf() failed>" : message;
-  panic_kick(const_message, at->function, at->line, obj);
+  fuckup(const_message, at->function, at->line, obj);
 }
+
+__cold void mdbx_assert_fail(const char *msg, const char *func, unsigned line) { fuckup(msg, func, line, nullptr); }
 
 #endif /* MDBX_CHECKING >= 0 */
 
@@ -29036,6 +29029,10 @@ bool osal_pathequal(const pathchar_t *l, const pathchar_t *r, size_t len) {
 #endif
 }
 
+#if !(defined(_WIN32) || defined(_WIN64))
+static const char dev_null[] = "/dev/null";
+#endif /* !Windows */
+
 int osal_openfile(const enum osal_openfile_purpose purpose, const MDBX_env *env, const pathchar_t *pathname,
                   mdbx_filehandle_t *fd, mdbx_mode_t unix_mode_bits) {
   *fd = INVALID_HANDLE_VALUE;
@@ -29163,7 +29160,6 @@ int osal_openfile(const enum osal_openfile_purpose purpose, const MDBX_env *env,
   /* Safeguard for https://libmdbx.dqdkfa.ru/dead-github/issues/144 */
 #if STDIN_FILENO == 0 && STDOUT_FILENO == 1 && STDERR_FILENO == 2
   int stub_fd0 = -1, stub_fd1 = -1, stub_fd2 = -1;
-  static const char dev_null[] = "/dev/null";
   if (!is_valid_fd(STDIN_FILENO)) {
     WARNING("STD%s_FILENO/%d is invalid, open %s for temporary stub", "IN", STDIN_FILENO, dev_null);
     stub_fd0 = open(dev_null, O_RDONLY | O_NOCTTY);
@@ -31383,6 +31379,36 @@ const char *osal_getenv(const char *name, bool secure) {
 #endif /* glibc >= 2.17 */
   return getenv(name);
 #endif
+}
+
+bool osal_safe_peek_uint32(const void *ptr, int32_t *dest) {
+  bool done = false;
+  *dest = 0;
+#if defined(_WIN32) || defined(_WIN64)
+  __try {
+    if (IsBadReadPtr(ptr, 4) == 0) {
+      memcpy(dest, ptr, 4);
+      done = true;
+    }
+  } __except (EXCEPTION_EXECUTE_HANDLER) {
+    return false;
+    ;
+  }
+#else
+  static int nullfd = -1;
+  if (nullfd < 0) {
+    nullfd = open(dev_null, O_WRONLY
+#ifdef O_CLOEXEC
+                                | O_CLOEXEC
+#endif /* O_CLOEXEC */
+    );
+  }
+  if (write(nullfd, ptr, 4) == 4) {
+    memcpy(dest, ptr, 4);
+    done = true;
+  }
+#endif
+  return done;
 }
 
 /*--------------------------------------------------------------------------*/
@@ -33696,15 +33722,16 @@ __hot pgno_t pnl_get_best_sequence(const pnl_t pnl, const size_t seq, const pgno
   size_t best_extra = MAX_PAGENO;
 
 #if MDBX_PNL_ASCENDING
-#error "FIXME"
+#error "FIXME: Since 2026-04-01 alternatives to MDBX_PNL_ASCENDING = 0 are no longer supported."
 #else
   size_t len = pnl_size(pnl);
   for (size_t span, i = len; i >= seq && pnl[i] <= defrag_detent - seq; i -= span) {
-    for (span = 1; i - span > 0 && MDBX_PNL_CONTIGUOUS(pnl[i - span], pnl[i], span); ++span)
-      ;
-    if (span >= seq) {
+    span = 1;
+    while (unlikely(MDBX_PNL_CONTIGUOUS(pnl[i - span], pnl[i], span)) && likely((intptr_t)(i - span) > 0))
+      ++span;
+    if (unlikely(span >= seq)) {
       size_t extra = span - seq;
-      if (extra < best_extra) {
+      if (unlikely(extra < best_extra)) {
         best_pos = i;
         best_extra = extra;
         if (best_extra == 0)
@@ -33729,7 +33756,7 @@ pgno_t pnl_crop_tail_sequence(const pnl_t pnl) {
   const size_t len = pnl_size(pnl);
   ASSERT(len > 0);
 #if MDBX_PNL_ASCENDING
-#error "FIXME"
+#error "FIXME: Since 2026-04-01 alternatives to MDBX_PNL_ASCENDING = 0 are no longer supported."
 #else
   size_t span = 1;
   while (1 + span <= len && MDBX_PNL_CONTIGUOUS(pnl[1], pnl[1 + span], span))
@@ -40227,10 +40254,10 @@ __dll_export
         0,
         14,
         1,
-        521,
+        535,
         "", /* pre-release suffix of SemVer
-                                        0.14.1.521 */
-        {"2026-03-30T18:07:04+03:00", "1e32d4c79f8feb451e687c4e4e323deaf7723e11", "b2ff247e2e49c93b3ff78f5a9e2eab260d2a89d1", "v0.14.1-521-gb2ff247e"},
+                                        0.14.1.535 */
+        {"2026-04-04T21:15:47+03:00", "d11775e028ddfd5d09923796876f0595b4e62968", "2ea4d6158a2e61552d6fce0be86f83abc027a12f", "v0.14.1-535-g2ea4d615"},
         sourcery};
 
 __dll_export

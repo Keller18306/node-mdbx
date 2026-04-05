@@ -1,4 +1,4 @@
-﻿/// This file is part of the libmdbx amalgamated source code (v0.14.1-521-gb2ff247e at 2026-03-30T18:07:04+03:00).
+﻿/// This file is part of the libmdbx amalgamated source code (v0.14.1-535-g2ea4d615 at 2026-04-04T21:15:47+03:00).
 /// \file mdbx.h++
 /// \brief The libmdbx C++ API header file.
 ///
@@ -10,7 +10,7 @@
 /// Please visit https://libmdbx.dqdkfa.ru for more information, documentation,
 /// C++ API description and links to the origin git repo with the source code.
 /// Questions, feedback and suggestions are welcome to the Telegram' group
-/// https://t.me/libmdbx.
+/// https://t.me/libmdbx, MAX' chat https://max.ru/join/dKckvyuARxp1vRK-wnPur8zYCEkbR3OUOmpPWkWxp78.
 ///
 /// Donations are welcome to ETH `0xD104d8f8B2dC312aaD74899F83EBf3EEBDC1EA3A`,
 /// BTC `bc1qzvl9uegf2ea6cwlytnanrscyv8snwsvrc0xfsu`, SOL `FTCTgbHajoLVZGr8aEFWMzx3NDMyS5wXJgfeMTmJznRi`.
@@ -214,27 +214,11 @@
 /** Workaround for old compilers without support assertion inside `constexpr` functions. */
 #if defined(CONSTEXPR_ASSERT)
 #define MDBX_CONSTEXPR_ASSERT(expr) CONSTEXPR_ASSERT(expr)
-#elif defined NDEBUG
+#elif defined(NDEBUG) && (!defined(MDBX_CHECKING) || !MDBX_CHECKING) && (!defined(MDBX_DEBUG) || !MDBX_DEBUG)
 #define MDBX_CONSTEXPR_ASSERT(expr) void(0)
 #else
 #define MDBX_CONSTEXPR_ASSERT(expr) ((expr) ? void(0) : [] { assert(!#expr); }())
 #endif /* MDBX_CONSTEXPR_ASSERT */
-
-#ifndef MDBX_LIKELY
-#if defined(DOXYGEN) || (defined(__GNUC__) || __has_builtin(__builtin_expect)) && !defined(__COVERITY__)
-#define MDBX_LIKELY(cond) __builtin_expect(!!(cond), 1)
-#else
-#define MDBX_LIKELY(x) (x)
-#endif
-#endif /* MDBX_LIKELY */
-
-#ifndef MDBX_UNLIKELY
-#if defined(DOXYGEN) || (defined(__GNUC__) || __has_builtin(__builtin_expect)) && !defined(__COVERITY__)
-#define MDBX_UNLIKELY(cond) __builtin_expect(!!(cond), 0)
-#else
-#define MDBX_UNLIKELY(x) (x)
-#endif
-#endif /* MDBX_UNLIKELY */
 
 /** Workaround for old compilers without properly support for C++20 `if constexpr`. */
 #if defined(DOXYGEN)
@@ -5246,7 +5230,7 @@ inline env &env::operator=(env &&other) noexcept {
 inline env::env(env &&other) noexcept : handle_(other.handle_) { other.handle_ = nullptr; }
 
 inline env::~env() noexcept {
-#ifndef NDEBUG
+#if (defined(MDBX_CHECKING) && MDBX_CHECKING > 0) || (defined(MDBX_DEBUG) && MDBX_DEBUG > 0)
   handle_ = reinterpret_cast<MDBX_env *>(uintptr_t(0xDeadBeef));
 #endif
 }
@@ -5634,7 +5618,7 @@ inline txn &txn::operator=(txn &&other) noexcept {
 inline txn::txn(txn &&other) noexcept : handle_(other.handle_) { other.handle_ = nullptr; }
 
 inline txn::~txn() noexcept {
-#ifndef NDEBUG
+#if (defined(MDBX_CHECKING) && MDBX_CHECKING > 0) || (defined(MDBX_DEBUG) && MDBX_DEBUG > 0)
   handle_ = reinterpret_cast<MDBX_txn *>(uintptr_t(0xDeadBeef));
 #endif
 }
@@ -6150,7 +6134,7 @@ inline cursor &cursor::operator=(cursor &&other) noexcept {
 inline cursor::cursor(cursor &&other) noexcept : handle_(other.handle_) { other.handle_ = nullptr; }
 
 inline cursor::~cursor() noexcept {
-#ifndef NDEBUG
+#if (defined(MDBX_CHECKING) && MDBX_CHECKING > 0) || (defined(MDBX_DEBUG) && MDBX_DEBUG > 0)
   handle_ = reinterpret_cast<MDBX_cursor *>(uintptr_t(0xDeadBeef));
 #endif
 }

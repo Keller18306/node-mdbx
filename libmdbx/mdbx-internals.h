@@ -1,10 +1,10 @@
-/* This file is part of the libmdbx amalgamated source code (v0.14.1-521-gb2ff247e at 2026-03-30T18:07:04+03:00).
+/* This file is part of the libmdbx amalgamated source code (v0.14.1-535-g2ea4d615 at 2026-04-04T21:15:47+03:00).
  *
  * libmdbx (aka MDBX) is an extremely fast, compact, powerful, embeddedable, transactional key-value storage engine with
  * open-source code. MDBX has a specific set of properties and capabilities, focused on creating unique lightweight
  * solutions.  Please visit https://libmdbx.dqdkfa.ru for more information, changelog, documentation, C++ API description
  * and links to the original git repo with the source code.  Questions, feedback and suggestions are welcome to the
- * Telegram' group https://t.me/libmdbx.
+ * Telegram' group https://t.me/libmdbx, MAX' chat https://max.ru/join/dKckvyuARxp1vRK-wnPur8zYCEkbR3OUOmpPWkWxp78.
  *
  * The libmdbx code will forever remain open and with high-quality free support, as far as the life circumstances of the
  * project participants allow. Donations are welcome to ETH `0xD104d8f8B2dC312aaD74899F83EBf3EEBDC1EA3A`,
@@ -24,7 +24,7 @@
 
 #define xMDBX_ALLOY 1  /* alloyed build */
 
-#define MDBX_BUILD_SOURCERY dd6dc4dddf390f4be49005e8dac1a89625c8902afb2bc1838666815bed5e24cf_v0_14_1_521_gb2ff247e
+#define MDBX_BUILD_SOURCERY 94480678e649f2ecf667647f37b98eddb130d81cbd09a73e816a546ee5d8d320_v0_14_1_535_g2ea4d615
 
 #define LIBMDBX_INTERNALS
 #define MDBX_DEPRECATED
@@ -1654,6 +1654,8 @@ MDBX_INTERNAL int osal_mb2w(const char *const src, wchar_t **const pdst);
 
 MDBX_INTERNAL bin128_t osal_guid(const MDBX_env *);
 
+MDBX_INTERNAL bool osal_safe_peek_uint32(const void *ptr, int32_t *dest);
+
 /*----------------------------------------------------------------------------*/
 
 MDBX_MAYBE_UNUSED MDBX_NOTHROW_PURE_FUNCTION static inline uint64_t osal_bswap64(uint64_t v) {
@@ -1881,16 +1883,6 @@ MDBX_MAYBE_UNUSED MDBX_NOTHROW_PURE_FUNCTION static inline uint32_t osal_bswap32
 #elif !(MDBX_ENABLE_DBI_LOCKFREE == 0 || MDBX_ENABLE_DBI_LOCKFREE == 1)
 #error MDBX_ENABLE_DBI_LOCKFREE must be defined as 0 or 1
 #endif /* MDBX_ENABLE_DBI_LOCKFREE */
-
-/** Controls sort order of internal page number lists.
- * This mostly experimental/advanced option with not for regular MDBX users.
- * \warning The database format depend on this option and libmdbx built with
- * different option value are incompatible. */
-#ifndef MDBX_PNL_ASCENDING
-#define MDBX_PNL_ASCENDING 0
-#elif !(MDBX_PNL_ASCENDING == 0 || MDBX_PNL_ASCENDING == 1)
-#error MDBX_PNL_ASCENDING must be defined as 0 or 1
-#endif /* MDBX_PNL_ASCENDING */
 
 /** Avoid dependence from MSVC CRT and use ntdll.dll instead. */
 #ifndef MDBX_WITHOUT_MSVC_CRT
@@ -2322,6 +2314,9 @@ MDBX_MAYBE_UNUSED MDBX_NOTHROW_PURE_FUNCTION static inline uint32_t osal_bswap32
 #if MDBX_FORCE_ASSERTIONS && MDBX_CHECKING < 2
 #error "Please use one of MDBX_CHECKING either MDBX_FORCE_ASSERTIONS build options, but not both"
 #endif
+
+/* Since 2026-04-01 alternatives to MDBX_PNL_ASCENDING = 0 are no longer supported. */
+#define MDBX_PNL_ASCENDING 0
 
 #endif /* DOXYGEN */
 
@@ -3671,7 +3666,7 @@ MDBX_NOTHROW_PURE_FUNCTION MDBX_MAYBE_UNUSED static inline bool pnl_contains_spa
                                                                                   pgno_t span) {
   size_t n = pnl_search_nochk(pnl, pgno);
 #if MDBX_PNL_ASCENDING
-#error "FIXME"
+#error "FIXME: Since 2026-04-01 alternatives to MDBX_PNL_ASCENDING = 0 are no longer supported."
 #else
   return n >= span && pnl[n] == pgno && MDBX_PNL_CONTIGUOUS(pnl[n - span + 1], pnl[n], span - 1);
 #endif /* MDBX_PNL_ASCENDING */

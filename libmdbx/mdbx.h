@@ -1,4 +1,4 @@
-/** This file is part of the libmdbx amalgamated source code (v0.14.1-521-gb2ff247e at 2026-03-30T18:07:04+03:00).
+/** This file is part of the libmdbx amalgamated source code (v0.14.1-535-g2ea4d615 at 2026-04-04T21:15:47+03:00).
 
 \file mdbx.h
 \brief The libmdbx C API header file.
@@ -19,7 +19,7 @@ systems compliant with POSIX.1-2008.
 Please visit https://libmdbx.dqdkfa.ru for more information, documentation,
 C++ API description and links to the origin git repo with the source code.
 Questions, feedback and suggestions are welcome to the Telegram' group
-https://t.me/libmdbx.
+https://t.me/libmdbx, MAX' chat https://max.ru/join/dKckvyuARxp1vRK-wnPur8zYCEkbR3OUOmpPWkWxp78.
 
 Donations are welcome to ETH `0xD104d8f8B2dC312aaD74899F83EBf3EEBDC1EA3A`,
 BTC `bc1qzvl9uegf2ea6cwlytnanrscyv8snwsvrc0xfsu`, SOL `FTCTgbHajoLVZGr8aEFWMzx3NDMyS5wXJgfeMTmJznRi`.
@@ -162,7 +162,7 @@ as a duplicates or as like a multiple values corresponds to keys.
 #include <stdint.h>
 #if !defined(assert)
 #include <assert.h>
-#endif /* NDEBUG */
+#endif /* assert */
 
 #if defined(_WIN32) || defined(_WIN64)
 #include <windows.h>
@@ -585,6 +585,34 @@ typedef mode_t mdbx_mode_t;
 
 #endif /* DEFINE_ENUM_FLAG_OPERATORS */
 
+#ifndef MDBX_LIKELY
+#if defined(DOXYGEN) || (defined(__GNUC__) || __has_builtin(__builtin_expect)) && !defined(__COVERITY__)
+#define MDBX_LIKELY(cond) __builtin_expect(!!(cond), 1)
+#else
+#define MDBX_LIKELY(x) (x)
+#endif
+#endif /* MDBX_LIKELY */
+
+#ifndef MDBX_UNLIKELY
+#if defined(DOXYGEN) || (defined(__GNUC__) || __has_builtin(__builtin_expect)) && !defined(__COVERITY__)
+#define MDBX_UNLIKELY(cond) __builtin_expect(!!(cond), 0)
+#else
+#define MDBX_UNLIKELY(x) (x)
+#endif
+#endif /* MDBX_UNLIKELY */
+
+#if defined(DOXYGEN) || (defined(MDBX_CHECKING) && MDBX_CHECKING > 0) || (defined(MDBX_DEBUG) && MDBX_DEBUG > 0)
+#define MDBX_INLINE_API_ASSERT(expr)                                                                                   \
+  do {                                                                                                                 \
+    if (MDBX_UNLIKELY(!(expr)))                                                                                        \
+      mdbx_assert_fail(#expr, __func__, __LINE__);                                                                     \
+  } while (0)
+#else
+/* clang-format off */
+#define MDBX_INLINE_API_ASSERT(expr) do {} while(0)
+/* clang-format on */
+#endif /* MDBX_INLINE_API_ASSERT */
+
 /** end of api_macros @} */
 
 /*----------------------------------------------------------------------------*/
@@ -702,14 +730,6 @@ void LIBMDBX_API NTAPI mdbx_module_handler(PVOID module, DWORD reason, PVOID res
 #endif
 
 #endif /* Windows && !DLL && MDBX_MANUAL_MODULE_HANDLER */
-
-#if (defined(MDBX_CHECKING) && MDBX_CHECKING > 0) || (defined(MDBX_DEBUG) && MDBX_DEBUG > 0)
-#define MDBX_INLINE_API_ASSERT(expr) assert(expr)
-#else
-/* clang-format off */
-#define MDBX_INLINE_API_ASSERT(expr) do {} while(0)
-/* clang-format on */
-#endif /* MDBX_INLINE_API_ASSERT */
 
 /* OPACITY STRUCTURES *********************************************************/
 
@@ -1009,6 +1029,9 @@ LIBMDBX_API int mdbx_setup_debug_nofmt(MDBX_log_level_t log_level, MDBX_debug_fl
  *                       'env', 'txn', 'cursor', etc. */
 typedef void (*MDBX_panic_func)(const char *msg, const char *function, unsigned line, const void *obj,
                                 const char *obj_class) MDBX_CXX17_NOEXCEPT;
+
+/** \brief Auxiliary function for MDBX_INLINE_API_ASSERT(). */
+MDBX_NORETURN LIBMDBX_API void mdbx_assert_fail(const char *msg, const char *func, unsigned line);
 
 /** \brief Sets or reset the callback for panic() and assert() for the current process.
  *

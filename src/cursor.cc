@@ -29,6 +29,8 @@ void MDBX_Native_Cursor::Init(Napi::Env env) {
 
 	Napi::Function func = DefineClass(env, "MDBXCursor",
 		{
+			StaticMethod("delRange", &MDBX_Native_Cursor::DelRange),
+
 			InstanceMethod("getKey", &MDBX_Native_Cursor::GetKey),
 			InstanceMethod("getValue", &MDBX_Native_Cursor::GetValue),
 
@@ -71,8 +73,10 @@ void MDBX_Native_Cursor::Init(Napi::Env env) {
 MDBX_Native_Cursor::MDBX_Native_Cursor(const Napi::CallbackInfo &info) : Napi::ObjectWrap<MDBX_Native_Cursor>(info) {
 	Napi::Env env = info.Env();
 
-	if (!info[0].IsObject()) {
-		Napi::TypeError::New(info.Env(), "Expected MDBX_Native_Dbi").ThrowAsJavaScriptException();
+	try {
+		Utils::_assertMdbxNativeDbi(env, info[0]);
+	} catch (const Napi::Error &e) {
+		e.ThrowAsJavaScriptException();
 		return;
 	}
 
@@ -146,6 +150,39 @@ MDBX_Native_Cursor::MDBX_Native_Cursor(const Napi::CallbackInfo &info) : Napi::O
 		Utils::throwMdbxError(env, rc);
 		return;
 	}
+}
+
+Napi::Value MDBX_Native_Cursor::DelRange(const Napi::CallbackInfo &info) {
+	Napi::Env env = info.Env();
+
+	try {
+		Utils::_assertMdbxNativeCursor(env, info[0]);
+		Utils::_assertMdbxNativeCursor(env, info[1]);
+	} catch (const Napi::Error &e) {
+		e.ThrowAsJavaScriptException();
+		return env.Undefined();
+	}
+
+	bool end_including = false;
+	uint64_t count;
+
+	Napi::Object beginCursorObj = info[0].As<Napi::Object>();
+	MDBX_Native_Cursor *beginCursorNative = Napi::ObjectWrap<MDBX_Native_Cursor>::Unwrap(beginCursorObj);
+
+	Napi::Object endCursorObj = info[1].As<Napi::Object>();
+	MDBX_Native_Cursor *endCursorNative = Napi::ObjectWrap<MDBX_Native_Cursor>::Unwrap(endCursorObj);
+
+	if (info[2].IsBoolean()) {
+		end_including = info[2].ToBoolean().Value();
+	}
+
+	int rc = mdbx_cursor_delete_range(beginCursorNative->cursor, endCursorNative->cursor, end_including, &count);
+	if (rc) {
+		Utils::throwMdbxError(env, rc);
+		return env.Undefined();
+	}
+
+	return Napi::Number::New(env, count);
 }
 
 Napi::Value MDBX_Native_Cursor::GetKey(const Napi::CallbackInfo &info) {

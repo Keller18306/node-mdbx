@@ -266,6 +266,19 @@ EnvInstanceData *Utils::envInstanceData(Napi::Env env) {
 	return instanceData;
 }
 
+void Utils::_assertMdbxNativeDbi(Napi::Env env, Napi::Value value) {
+	if (!value.IsObject()) {
+		throw Napi::TypeError::New(env, "Invalid Dbi: provided value is not a object");
+	}
+
+	Napi::Object dbiObj = value.ToObject();
+	EnvInstanceData *instanceData = Utils::envInstanceData(env);
+
+	if (!dbiObj.InstanceOf(instanceData->dbi->Value())) {
+		throw Napi::TypeError::New(env, "Invalid Dbi: provided value is not an instance of Dbi");
+	}
+}
+
 void Utils::_assertMdbxNativeTxn(Napi::Env env, Napi::Value value) {
 	if (!value.IsObject()) {
 		throw Napi::TypeError::New(env, "Invalid Txn: provided value is not a object");
@@ -276,5 +289,18 @@ void Utils::_assertMdbxNativeTxn(Napi::Env env, Napi::Value value) {
 
 	if (!txnObj.InstanceOf(instanceData->txn->Value())) {
 		throw Napi::TypeError::New(env, "Invalid Txn: provided value is not an instance of Txn");
+	}
+}
+
+void Utils::_assertMdbxNativeCursor(Napi::Env env, Napi::Value value) {
+	if (!value.IsObject()) {
+		throw Napi::TypeError::New(env, "Invalid Cursor: provided value is not a object");
+	}
+
+	Napi::Object cursorObj = value.ToObject();
+	EnvInstanceData *instanceData = Utils::envInstanceData(env);
+
+	if (!cursorObj.InstanceOf(instanceData->cursor->Value())) {
+		throw Napi::TypeError::New(env, "Invalid Cursor: provided value is not an instance of Cursor");
 	}
 }

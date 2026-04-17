@@ -22,6 +22,8 @@ class MDBX_Native_Cursor : public Napi::ObjectWrap<MDBX_Native_Cursor> {
 	bool isIntBE;
 	bool isStrUtf16;
 
+	static Napi::Value DelRange(const Napi::CallbackInfo &info);
+
 	Napi::Value GetKey(const Napi::CallbackInfo &info);
 	Napi::Value GetValue(const Napi::CallbackInfo &info);
 

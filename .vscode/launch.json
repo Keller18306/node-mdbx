@@ -5,11 +5,13 @@
     "version": "0.2.0",
     "configurations": [
         {
-            "name": "(gdb) Запустить",
+            "name": "(gdb) Запустить Node",
             "type": "cppdbg",
             "request": "launch",
             "program": "/usr/bin/node",
-            "args": ["tests/leak.js"],
+            "args": [
+                "tests/leak.js"
+            ],
             "stopAtEntry": false,
             "cwd": "${workspaceFolder}",
             "environment": [],
@@ -27,7 +29,6 @@
                     "ignoreFailures": true
                 }
             ]
-        }
-
+        },
     ]
 }

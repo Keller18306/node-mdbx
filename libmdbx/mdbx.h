@@ -1,4 +1,4 @@
-/** This file is part of the libmdbx amalgamated source code (v0.14.1-535-g2ea4d615 at 2026-04-04T21:15:47+03:00).
+/** This file is part of the libmdbx amalgamated source code (v0.14.1-574-g936b8871 at 2026-04-17T22:16:01+03:00).
 
 \file mdbx.h
 \brief The libmdbx C API header file.
@@ -1417,7 +1417,7 @@ typedef enum MDBX_env_flags {
    *    a steady commit-point to resume reuse pages, each time there is
    *    insufficient space and before increasing the size of the file on disk.
    *
-   * In other words, with `MDBX_SAFE_NOSYNC` flag MDBX insures you from the
+   * In other words, with `MDBX_SAFE_NOSYNC` flag MDBX ensures you from the
    * whole database corruption, at the cost increasing database size and/or
    * number of disk IOPs. So, `MDBX_SAFE_NOSYNC` flag could be used with
    * \ref mdbx_env_sync() as alternatively for batch committing or nested
@@ -2374,7 +2374,7 @@ typedef enum MDBX_option {
    *  - If `MDBX_opt_prefer_waf_insteadof_balance = True`, then an already modified page will be selected, which will
    *    NOT INCREASE the number of modified pages and the amount of writing to filesystem when the current transaction
    *    is committed (aka WAF or Write Amplification Factor), but on average will INCREASE the unevenness of page
-   *    filling/density.
+   *    filling/density. This is the default behaviour since 2026-01-04.
    *
    *  - If `MDBX_opt_prefer_waf_insteadof_balance = False`, then a less populated page will be selected, which will
    *    INCREASE the number of modified pages and the amount of writing to filesystem when the current transaction is
@@ -6294,6 +6294,36 @@ LIBMDBX_API int mdbx_cursor_put(MDBX_cursor *cursor, const MDBX_val *key, MDBX_v
  * \retval MDBX_EINVAL        An invalid parameter was specified. */
 LIBMDBX_API int mdbx_cursor_del(MDBX_cursor *cursor, MDBX_put_flags_t flags);
 
+/** \brief Quickly removes given range of items.
+ * \ingroup c_crud
+ *
+ * Performs mass deletion of elements between positions of given cursors pair much faster,
+ * cutting out entire pages and branches from the B+ tree structure.
+ *
+ * \param [in] begin                Defines the beginning of the range to delete,
+ *                                  or can be NULL to delete starting the first item.
+ *
+ * \param [in] end                  Defines the ending of the range to delete,
+ *                                  or can be NULL to delete up to the last item.
+ *
+ * \param [in] end_including        The boolean flag determines whether the end of the given
+ *                                  interval should be included in the range to be deleted.
+ *
+ * \param [out] number_of_affected  Address to store the result
+ *                                  number of removed items.
+ *
+ * \see mdbx_cursor_bunch_delete()
+ * \returns A non-zero error value on failure and 0 on success,
+ *          some possible errors are:
+ * \retval MDBX_THREAD_MISMATCH  Given transaction is not owned
+ *                               by current thread.
+ * \retval MDBX_ENODATA       One or both of the given cursor(s) is not positioned to a data.
+ * \retval MDBX_TXN_FULL      The transaction has too many dirty pages.
+ * \retval MDBX_EACCES        An attempt was made to write in a read-only transaction.
+ * \retval MDBX_EINVAL        An invalid parameter was specified. */
+LIBMDBX_API int mdbx_cursor_delete_range(MDBX_cursor *begin, MDBX_cursor *end, bool end_including,
+                                         uint64_t *number_of_affected);
+
 /** \brief Modes for deleting bunches of neighboring items with self-documenting names.
  *
  * The EXCLUDING and INCLUDING suffixes mean correspondingly
@@ -6317,13 +6347,11 @@ typedef enum MDBX_bunch_action {
 
 /** \brief Quickly removes bunches of neighboring items.
  * \ingroup c_crud
- * \see MDBX_bunch_action_t
  *
- * The function performs massive deletion much faster by cutting whole pages and branches
+ * Performs massive deletion much faster by cutting whole pages and branches
  * with will deleted elements from the B+tree structure.
- *
- * \note Currently, only a naive implementation of the function is available,
- *       which will be replaced with a full-fledged one when ready.
+ * \see mdbx_cursor_delete_range()
+ * \see MDBX_bunch_action_t
  *
  * \param [in] cursor  A cursor handle returned by mdbx_cursor_open().
  * \param [in] action  The requested deletion action as the one
@@ -6335,18 +6363,16 @@ typedef enum MDBX_bunch_action {
  *          some possible errors are:
  * \retval MDBX_THREAD_MISMATCH  Given transaction is not owned
  *                               by current thread.
- * \retval MDBX_MAP_FULL      The database is full,
- *                            see \ref mdbx_env_set_mapsize().
+ * \retval MDBX_ENODATA       The given cursor is not positioned to a data..
  * \retval MDBX_TXN_FULL      The transaction has too many dirty pages.
- * \retval MDBX_EACCES        An attempt was made to write in a read-only
- *                            transaction.
+ * \retval MDBX_EACCES        An attempt was made to write in a read-only transaction.
  * \retval MDBX_EINVAL        An invalid parameter was specified. */
 LIBMDBX_API int mdbx_cursor_bunch_delete(MDBX_cursor *cursor, MDBX_bunch_action_t action, uint64_t *number_of_affected);
 
 /** \brief Return count values (aka duplicates) for current key.
  * \ingroup c_crud
  *
- * \see mdbx_cursor_count_ex
+ * \see mdbx_cursor_count_ex()
  *
  * This call is valid for all tables, but reasonable only for that support
  * sorted duplicate data items \ref MDBX_DUPSORT.
@@ -7319,17 +7345,17 @@ LIBMDBX_API int mdbx_gc_info(MDBX_txn *txn, MDBX_gc_info_t *info, size_t bytes, 
  * \see mdbx_env_defrag() */
 typedef enum MDBX_defrag_stopping_reasons {
   MDBX_defrag_noobstacles = 0,
-  MDBX_defrag_step_size = 1,        /**< Step transaction size limit reached */
-  MDBX_defrag_large_chunk = 2,      /**< Preliminary movement is necessary to form
-                                         a sufficient sequence of adjacent free pages in order to
-                                         then move the revealed Large/Overflow page on a next cycle */
-  MDBX_defrag_discontinued = 4,     /**< Discontinued by user */
-  MDBX_defrag_laggard_reader = 8,   /**< At least one process performing a reading transaction
-                                         prevents further defragmentation */
-  MDBX_defrag_enough_theshold = 16, /**< The defragmentation goal set by the user has been achieved */
-  MDBX_defrag_time_limit = 32,      /**< The specified limit on the duration of defragmentation has been reached */
-  MDBX_defrag_aborted = 64,         /**< Aborted by user */
-  MDBX_defrag_error = 128           /**< An error occurred during defragmentation */
+  MDBX_defrag_step_size = 1,         /**< Step transaction size limit reached */
+  MDBX_defrag_large_chunk = 2,       /**< Preliminary movement is necessary to form
+                                          a sufficient sequence of adjacent free pages in order to
+                                          then move the revealed Large/Overflow page on a next cycle */
+  MDBX_defrag_discontinued = 4,      /**< Discontinued by user */
+  MDBX_defrag_laggard_reader = 8,    /**< At least one process performing a reading transaction
+                                          prevents further defragmentation */
+  MDBX_defrag_enough_threshold = 16, /**< The defragmentation goal set by the user has been achieved */
+  MDBX_defrag_time_limit = 32,       /**< The specified limit on the duration of defragmentation has been reached */
+  MDBX_defrag_aborted = 64,          /**< Aborted by user */
+  MDBX_defrag_error = 128            /**< An error occurred during defragmentation */
 } MDBX_defrag_stopping_reasons_t;
 DEFINE_ENUM_FLAG_OPERATORS(MDBX_defrag_stopping_reasons)
 

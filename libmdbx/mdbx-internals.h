@@ -1,4 +1,4 @@
-/* This file is part of the libmdbx amalgamated source code (v0.14.1-535-g2ea4d615 at 2026-04-04T21:15:47+03:00).
+/* This file is part of the libmdbx amalgamated source code (v0.14.1-574-g936b8871 at 2026-04-17T22:16:01+03:00).
  *
  * libmdbx (aka MDBX) is an extremely fast, compact, powerful, embeddedable, transactional key-value storage engine with
  * open-source code. MDBX has a specific set of properties and capabilities, focused on creating unique lightweight
@@ -24,7 +24,7 @@
 
 #define xMDBX_ALLOY 1  /* alloyed build */
 
-#define MDBX_BUILD_SOURCERY 94480678e649f2ecf667647f37b98eddb130d81cbd09a73e816a546ee5d8d320_v0_14_1_535_g2ea4d615
+#define MDBX_BUILD_SOURCERY a4dda61f34a0ba00373246bc92a08d50fc5da996f2d8a7adf0543d26143013d1_v0_14_1_574_g936b8871
 
 #define LIBMDBX_INTERNALS
 #define MDBX_DEPRECATED
@@ -1812,6 +1812,13 @@ MDBX_MAYBE_UNUSED MDBX_NOTHROW_PURE_FUNCTION static inline uint32_t osal_bswap32
 #error MDBX_ENABLE_BIGFOOT must be defined as 0 or 1
 #endif /* MDBX_ENABLE_BIGFOOT */
 
+/** Enables fast deletion by whole b-tree branches feature. */
+#ifndef MDBX_ENABLE_BUNCHES_REMOVAL
+#define MDBX_ENABLE_BUNCHES_REMOVAL 1
+#elif !(MDBX_ENABLE_BUNCHES_REMOVAL == 0 || MDBX_ENABLE_BUNCHES_REMOVAL == 1)
+#error MDBX_ENABLE_BUNCHES_REMOVAL must be MDBX_ENABLE_BUNCHES_REMOVAL as 0 or 1
+#endif /* MDBX_ENABLE_BUNCHES_REMOVAL */
+
 /** Disable some checks to reduce an overhead and detection probability of
  * database corruption to a values closer to the LMDB. */
 #ifndef MDBX_DISABLE_VALIDATION
@@ -2029,7 +2036,7 @@ MDBX_MAYBE_UNUSED MDBX_NOTHROW_PURE_FUNCTION static inline uint32_t osal_bswap32
 #else
 #define MDBX_LOCKING MDBX_LOCKING_POSIX2001
 #endif
-#elif defined(__sun) || defined(__SVR4) || defined(__svr4__)
+#elif defined(__sun) || defined(__SVR4) || defined(__svr4__) || defined(__HAIKU__)
 #define MDBX_LOCKING MDBX_LOCKING_POSIX1988
 #else
 #define MDBX_LOCKING MDBX_LOCKING_SYSV
